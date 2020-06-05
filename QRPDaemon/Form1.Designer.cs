@@ -97,6 +97,7 @@
             this.ultraButton3.Name = "ultraButton3";
             this.ultraButton3.Size = new System.Drawing.Size(94, 44);
             this.ultraButton3.TabIndex = 2;
+            this.ultraButton3.Text = "DMA4500";
             // 
             // ultraButton4
             // 
