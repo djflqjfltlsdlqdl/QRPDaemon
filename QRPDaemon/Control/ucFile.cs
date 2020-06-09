@@ -7,13 +7,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using QRPDaemon.COM;
 using System.IO;
-
 using System.Globalization;
-using CsvHelper;
-using CsvHelper.Configuration;
 using ExcelDataReader;
+using QRPDaemon.COM;
 
 namespace QRPDaemon.Control
 {
@@ -27,11 +24,10 @@ namespace QRPDaemon.Control
         private string m_strPlantCode = string.Empty;
         private string m_strOriginFilePath = string.Empty;
         private string m_strTargetFilePath = string.Empty;
-        private string m_strIntervar = string.Empty;
+        private int m_intIntervar = 5;
         private string m_strMeasureName = string.Empty;
         private string m_strFileExtension = string.Empty;
-
-        private DateTime m_strDateCheck = new DateTime();
+        private int m_intRowIndex = 0;
         /// <summary>
         /// 진행상태
         /// </summary>
@@ -45,7 +41,7 @@ namespace QRPDaemon.Control
         /// </summary>
         public string PlantCode
         {
-            get { return m_strPlantCode; }
+            //get { return m_strPlantCode; }
             set { m_strPlantCode = value; }
         }
         /// <summary>
@@ -53,7 +49,7 @@ namespace QRPDaemon.Control
         /// </summary>
         public string OriginFilePath
         {
-            get { return m_strOriginFilePath; }
+            //get { return m_strOriginFilePath; }
             set { m_strOriginFilePath = value; }
         }
         /// <summary>
@@ -61,23 +57,23 @@ namespace QRPDaemon.Control
         /// </summary>
         public string TargetFilePath
         {
-            get { return m_strTargetFilePath; }
+            //get { return m_strTargetFilePath; }
             set { m_strTargetFilePath = value; }
         }
         /// <summary>
         /// 주기
         /// </summary>
-        public string Intervar
+        public int Intervar
         {
-            get { return m_strIntervar; }
-            set { m_strIntervar = value; }
+            //get { return m_strIntervar; }
+            set { m_intIntervar = value; }
         }
         /// <summary>
         /// 실험기기명
         /// </summary>
         public string MeasureName
         {
-            get { return m_strMeasureName; }
+            //get { return m_strMeasureName; }
             set { m_strMeasureName = value; }
         }
         /// <summary>
@@ -85,8 +81,16 @@ namespace QRPDaemon.Control
         /// </summary>
         public string FileExtension
         {
-            get { return m_strFileExtension; }
+            //get { return m_strFileExtension; }
             set { m_strFileExtension = value; }
+        }
+        /// <summary>
+        /// 시작 행 Index
+        /// </summary>
+        public int RowIndex
+        {
+            //get { return m_intRowIndex; }
+            set { m_intRowIndex = value; }
         }
         #endregion Var
 
@@ -96,17 +100,18 @@ namespace QRPDaemon.Control
 
             this.Load += UcFile_Load;
 
-            this.btnStart.Click += new EventHandler(btnStart_Click);
-            this.btnStop.Click += new EventHandler(btnStop_Click);
-            this.txtInterval.KeyDown += new KeyEventHandler(txtInterval_KeyDown);
+            btnStart.Click += new EventHandler(btnStart_Click);
+            btnStop.Click += new EventHandler(btnStop_Click);
+            txtInterval.KeyDown += new KeyEventHandler(txtInterval_KeyDown);
         }
 
         private void UcFile_Load(object sender, EventArgs e)
         {
-            m_strDateCheck = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day);
-
             InitControl();
             mfReadLogData();
+
+            clsScheduledTimer st = new clsScheduledTimer();
+            //st.SetTime(new TimeSpan(0, 0, 0), )
         }
 
         #region Initialize
@@ -117,7 +122,7 @@ namespace QRPDaemon.Control
             btnStop.Enabled = false;
 
             // 주기
-            txtInterval.Text = Intervar;
+            txtInterval.Text = m_intIntervar.ToString();
 
             #region DataGridView
             dgvLogList.ReadOnly = true;
@@ -169,15 +174,9 @@ namespace QRPDaemon.Control
         {
             try
             {
-                if (!this.m_bolProgFlag)
+                if (!m_bolProgFlag)
                 {
-                    //if (m_thread == null || !m_thread.IsAlive)
-                    //{
-                    //    m_thread = new System.Threading.Thread(this.mfDoWork);
-                    //    this.m_bolProgFlag = true;
-                    //    m_thread.Start();
-                    //}
-                    this.m_bolProgFlag = true;
+                    m_bolProgFlag = true;
                     Task work = mfDoWork();
                 }
             }
@@ -197,11 +196,6 @@ namespace QRPDaemon.Control
                 else
                     lbInterval.BackColor = System.Drawing.Color.Red;
 
-                if (m_strDateCheck.AddHours(24) < DateTime.Now)
-                {
-                    this.m_strDateCheck = this.m_strDateCheck.AddDays(1);
-                    dgvLogList.Rows.Clear();
-                }
             }
             catch (System.Exception ex)
             {
@@ -220,7 +214,7 @@ namespace QRPDaemon.Control
             {
                 try
                 {
-                    if (this.m_bolProgFlag)
+                    if (m_bolProgFlag)
                     {
                         mfSetToolStripStatusLabel("Start...");
 
@@ -230,16 +224,16 @@ namespace QRPDaemon.Control
                             mfAddGridMessage(string.Format("처리완료{0}", i));
                         }
 
-                        System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(this.OriginFilePath);
+                        System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
                         if (diInfo.Exists)
                         {
                             DateTime Now = DateTime.Now;
-                            if (PlantCode.Equals("03"))
+                            if (m_strPlantCode.Equals("03"))
                                 Now = Now - Properties.Settings.Default.StartTime_03;
-                            else if (PlantCode.Equals("05"))
+                            else if (m_strPlantCode.Equals("05"))
                                 Now = Now - Properties.Settings.Default.StartTime_05;
 
-                            string strTargetPath = string.Format(@"{0}\{1}\{2}", this.TargetFilePath, Now.ToString("yyyy-MM-dd"), MeasureName);
+                            string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strTargetFilePath, Now.ToString("yyyy-MM-dd"), m_strMeasureName);
                             System.IO.DirectoryInfo diTarget = new System.IO.DirectoryInfo(strTargetPath);
                             if (!diTarget.Exists)
                                 diTarget.Create();
@@ -247,11 +241,11 @@ namespace QRPDaemon.Control
                             System.IO.FileInfo[] getFiles = diInfo.GetFiles();
                             foreach (System.IO.FileInfo fi in getFiles)
                             {
-                                if (fi.Extension.Equals(this.FileExtension))
+                                if (fi.Extension.Equals(m_strFileExtension))
                                 {
-                                    if (PlantCode.Equals("03"))
+                                    if (m_strPlantCode.Equals("03"))
                                     {
-                                        switch (MeasureName)
+                                        switch (m_strMeasureName)
                                         {
                                             case "밀도계":
                                                 mfParsing_Density_03(fi.FullName);
@@ -267,23 +261,26 @@ namespace QRPDaemon.Control
                                                 break;
                                         }
                                     }
-                                    else if(PlantCode.Equals("05"))
+                                    else if(m_strPlantCode.Equals("05"))
                                     {
-                                        //switch (MeasureName)
-                                        //{
-                                        //    case "밀도계":
-                                        //        mfParsing_Density(fi.FullName);
-                                        //        break;
-                                        //    case "TOC":
-                                        //        mfParsing_TOC(fi.FullName);
-                                        //        break;
-                                        //    case "음이온":
-                                        //        mfParsing_Anion(fi.FullName);
-                                        //        break;
-                                        //    case "양이온":
-                                        //        mfParsing_Cation(fi.FullName);
-                                        //        break;
-                                        //}
+                                        switch (m_strMeasureName)
+                                        {
+                                            case "밀도계":
+                                                mfParsing_Density_05(fi.FullName);
+                                                break;
+                                            //case "TOC":
+                                            //    mfParsing_TOC(fi.FullName);
+                                            //    break;
+                                            case "ICP-MS(7900)":
+                                                mfParsing_Cation_05_7900(fi.FullName);
+                                                break;
+                                            case "ICP-MS(A-M90)":
+                                                mfParsing_Cation_05_M90(fi.FullName);
+                                                break;
+                                            case "ILC":
+                                                mfParsing_Anion_05(fi.FullName);
+                                                break;
+                                        }
                                     }
                                 }
                                 fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
@@ -291,7 +288,7 @@ namespace QRPDaemon.Control
                         }
                         else
                         {
-                            this.mfAddGridMessage("파일경로 에러!");
+                            mfAddGridMessage("파일경로 에러!");
                         }
 
                         mfSetToolStripStatusLabel("처리 완료..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
@@ -299,11 +296,11 @@ namespace QRPDaemon.Control
                 }
                 catch (System.Exception ex)
                 {
-                    this.mfAddGridMessage(ex.ToString());
+                    mfAddGridMessage(ex.ToString());
                 }
                 finally
                 {
-                    this.m_bolProgFlag = false;
+                    m_bolProgFlag = false;
                 }
             });
         }
@@ -314,37 +311,38 @@ namespace QRPDaemon.Control
         {
             try
             {
-                if (this.m_timerMain == null)
+                if (m_timerMain == null)
                     m_timerMain = new Timer();
-                if (this.m_timerSub == null)
+                if (m_timerSub == null)
                     m_timerSub = new Timer();
 
-                this.m_timerMain.Tick += new EventHandler(m_timerMain_Tick);
-                this.m_timerSub.Tick += new EventHandler(m_timerSub_Tick);
+                m_timerMain.Tick += new EventHandler(m_timerMain_Tick);
+                m_timerSub.Tick += new EventHandler(m_timerSub_Tick);
 
-                this.m_timerSub.Interval = 1000;
+                m_timerSub.Interval = 1000;
 
-                int intInterval = Convert.ToInt32(this.txtInterval.Text);
-                this.m_timerMain.Interval = intInterval * 1000 * 60;
+                int intInterval = txtInterval.Text.ToInt();
+                m_timerMain.Interval = intInterval * 1000 * 60;
 
-                this.tsStatusLabel.Text = "시작...";
+                tsStatusLabel.Text = "시작...";
 
-                this.m_timerMain.Start();
-                this.m_timerSub.Start();
+                m_timerMain.Start();
+                m_timerSub.Start();
 
-                if (!this.m_bolProgFlag)
+                if (!m_bolProgFlag)
                 {
-                    this.m_bolProgFlag = true;
+                    m_bolProgFlag = true;
                     Task work = mfDoWork();
                 }
             }
             catch (System.Exception ex)
             {
                 MessageBox.Show(ex.ToString());
-                this.mfAddGridMessage(ex.ToString());
+                mfAddGridMessage(ex.ToString());
             }
             finally
             {
+                txtInterval.Enabled = false;
                 btnStart.Enabled = false;
                 btnStop.Enabled = true;
             }
@@ -356,15 +354,15 @@ namespace QRPDaemon.Control
         {
             try
             {
-                this.m_timerMain.Tick -= new EventHandler(m_timerMain_Tick);
-                this.m_timerSub.Tick -= new EventHandler(m_timerSub_Tick);
+                m_timerMain.Tick -= new EventHandler(m_timerMain_Tick);
+                m_timerSub.Tick -= new EventHandler(m_timerSub_Tick);
 
-                this.m_bolProgFlag = false;
-                this.m_timerMain.Stop();
-                this.m_timerSub.Stop();
+                m_bolProgFlag = false;
+                m_timerMain.Stop();
+                m_timerSub.Stop();
 
-                this.m_timerMain = null;
-                this.m_timerSub = null;
+                m_timerMain = null;
+                m_timerSub = null;
 
                 lbInterval.BackColor = System.Drawing.Color.Red;
                 tsStatusLabel.Text = "중지...";
@@ -375,17 +373,11 @@ namespace QRPDaemon.Control
             }
             finally
             {
+                txtInterval.Enabled = true;
                 btnStart.Enabled = true;
                 btnStop.Enabled = false;
             }
         }
-
-        #region Invoke
-        /// <summary>
-        /// Log리스트 Invoke Delegate
-        /// </summary>
-        /// <param name="Messages"></param>
-        delegate void SetGridCallBack(string Messages);
         /// <summary>
         /// Lot리스트 기록메소드
         /// </summary>
@@ -394,33 +386,22 @@ namespace QRPDaemon.Control
         {
             try
             {
-                if (this.dgvLogList.InvokeRequired)
-                {
-                    SetGridCallBack cb = new SetGridCallBack(mfAddGridMessage);
-                    this.dgvLogList.Invoke(cb, new object[] { strMessage });
-                }
-                else
+                dgvLogList.mfInvokeIfRequired(() =>
                 {
                     string strDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    this.dgvLogList.Rows.Add(strDateTime, strMessage);
+                    dgvLogList.Rows.Add(strDateTime, strMessage);
 
                     // 바인딩후 가장 마지막 행으로 스크롤 이동
-                    this.dgvLogList.FirstDisplayedScrollingRowIndex = this.dgvLogList.Rows.Count - 1;
+                    dgvLogList.FirstDisplayedScrollingRowIndex = dgvLogList.Rows.Count - 1;
 
                     new Log().mfWriteLog(CommonCode.CreateLogPathName, m_strMeasureName, strDateTime, strMessage);
-                }
+                });
             }
             catch (System.Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
         }
-
-        /// <summary>
-        /// 상태창 Invoke Delegate
-        /// </summary>
-        /// <param name="strText"></param>
-        delegate void SetStatusLabelCallBack(string strText);
         /// <summary>
         /// 상태창 Text 변경 메소드
         /// </summary>
@@ -429,23 +410,16 @@ namespace QRPDaemon.Control
         {
             try
             {
-                if (this.stStrip.InvokeRequired)
+                stStrip.mfInvokeIfRequired(() =>
                 {
-                    SetStatusLabelCallBack cb = new SetStatusLabelCallBack(mfSetToolStripStatusLabel);
-                    this.stStrip.Invoke(cb, new object[] { strMessage });
-                }
-                else
-                {
-                    this.stStrip.Items["tsStatusLabel"].Text = strMessage;
-                }
+                    stStrip.Items["tsStatusLabel"].Text = strMessage;
+                });
             }
             catch (System.Exception ex)
             {
                 MessageBox.Show(ex.ToString());
             }
         }
-        #endregion
-
         /// <summary>
         /// Log 파일 그리드 Binding
         /// </summary>
@@ -460,7 +434,7 @@ namespace QRPDaemon.Control
                 for (int i = 0; i < intCnt; i++)
                 {
                     string[] strMessageLine = strLogMessages[i].Split(strSplit);
-                    this.dgvLogList.Rows.Add(strMessageLine[0], strMessageLine[1]);
+                    dgvLogList.Rows.Add(strMessageLine[0], strMessageLine[1]);
                 }
             }
             catch (System.Exception ex)
@@ -469,295 +443,222 @@ namespace QRPDaemon.Control
             }
         }
 
+        private void mfDeleteGrid()
+        {
+        }
+
         #region File Parsing
         /// <summary>
-        /// 양이온
+        /// 전주 양이온
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Cation_03(string strFilePath)
         {
             try
             {
-                StringBuilder sb = new StringBuilder();
-                string strValue;
-                string strSampleID;
-                string strSampleDate;
-                string strSampleDate_01;
-                string strSampleDate_02;
-
-                using (var reader = new StreamReader(strFilePath))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
                 {
-                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
                     {
-                        while (csv.Read())
+                        string strSampleID;
+                        string strSampleDate;
+                        DateTime dateSampleDate;
+                        bool bolBreak = false;
+                        do
                         {
-                            sb.AppendFormat("{0, 3} : {1}", csv.Context.Row, csv.Context.RawRecord);
-
-                            if (csv.TryGetField<string>(0, out strValue))
+                            while (reader.Read())
                             {
-                                if (strValue.Equals("Sample ID:"))
+                                switch (reader.GetString(0)??"")
                                 {
-                                    csv.TryGetField<string>(1, out strSampleID);
+                                    case "Sample ID:":
+                                        strSampleID = reader.GetString(1);
+                                        break;
+                                    case "Sample Date/Time:":
+                                        strSampleDate = string.Format("{0} {1}", reader.GetValue(2), reader.GetValue(3));
+                                        DateTime.TryParse(strSampleDate, out dateSampleDate);
+                                        bolBreak = true;
+                                        break;
                                 }
-                                else if (strValue.Equals("Sample Date/Time:"))
+
+                                if (bolBreak)
                                 {
-                                    csv.TryGetField<string>(2, out strSampleDate_01);
-                                    csv.TryGetField<string>(3, out strSampleDate_02);
-                                    strSampleDate = strSampleDate_01 + strSampleDate_02;
-                                    DateTime dtSampleDate;
-                                    DateTime.TryParse(strSampleDate, out dtSampleDate);
-                                }
-                                else if (strValue.StartsWith("Results"))
-                                {
-                                    csv.Read();
-                                    csv.ReadHeader();
                                     break;
                                 }
                             }
-                        }
-                        csv.Configuration.RegisterClassMap<CationMapper>();
-                        var records = csv.GetRecords<Cation>().ToList();
-                        foreach (var dd in records)
-                        {
+                        } while (reader.NextResult());
 
-                        }
+                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        {
+                            ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                            {
+                                EmptyColumnNamePrefix = "Column",
+                                UseHeaderRow = true,
+
+                                ReadHeaderRow = (rowReader) =>
+                                {
+                                    // F.ex skip the first row and use the 2nd row as column headers:
+                                    for (int i = 0; i < m_intRowIndex; i++)
+                                    {
+                                        rowReader.Read();
+                                    }
+                                }
+                            }
+                        });
                     }
                 }
             }
             catch (Exception ex)
             {
-                this.mfAddGridMessage(ex.ToString());
+                mfAddGridMessage(ex.ToString());
             }
         }
         /// <summary>
-        /// 음이온
+        /// 전주 음이온
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Anion_03(string strFilePath)
         {
             try
             {
-                StringBuilder sb = new StringBuilder();
-                DataTable dtData = new DataTable();
-                dtData.Columns.AddRange(new DataColumn[]
-                {
-                    new DataColumn("InspectDate", typeof(DateTime))
-                    , new DataColumn("SampleName", typeof(string))
-                    , new DataColumn("Info", typeof(string))
-                    , new DataColumn("F", typeof(decimal))
-                    , new DataColumn("CI", typeof(decimal))
-                    , new DataColumn("NO2", typeof(decimal))
-                    , new DataColumn("Br", typeof(decimal))
-                    , new DataColumn("NO3", typeof(decimal))
-                    , new DataColumn("PO4", typeof(decimal))
-                    , new DataColumn("SO4", typeof(decimal))
-                });
-                DataRow dr;
-                using (var reader = new StreamReader(strFilePath))
-                {
-                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                    {
-                        csv.Configuration.Delimiter = "\t";
-                        csv.Configuration.MissingFieldFound = null;
-                        csv.Configuration.IgnoreBlankLines = true;
-
-                        csv.Configuration.RegisterClassMap<AnionMapper>();
-
-                        var records = csv.GetRecords<Anion>().ToList();
-
-                        foreach (var dd in records)
-                        {
-                            if (dd.InspectDate.Trim().Length.Equals(0))
-                            {
-                                continue;
-                            }
-
-                            dr = dtData.NewRow();
-                            dr["InspectDate"] = dd.InspectDate.Substring(0, 19);
-                            dr["SampleName"] = dd.SampleName;
-                            dr["Info"] = dd.Info;
-                            dr["F"] = dd.F.HasValue ? (object)dd.F.Value : DBNull.Value;
-                            dr["CI"] = dd.CI.HasValue ? (object)dd.CI.Value : DBNull.Value;
-                            dr["NO2"] = dd.NO2.HasValue ? (object)dd.NO2.Value : DBNull.Value;
-                            dr["Br"] = dd.Br.HasValue ? (object)dd.Br.Value : DBNull.Value;
-                            dr["NO3"] = dd.NO3.HasValue ? (object)dd.NO3.Value : DBNull.Value;
-                            dr["PO4"] = dd.PO4.HasValue ? (object)dd.PO4.Value : DBNull.Value;
-                            dr["SO4"] = dd.SO4.HasValue ? (object)dd.SO4.Value : DBNull.Value;
-                            dtData.Rows.Add(dr);
-                        }
-                    }
-                }
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
             }
             catch (Exception ex)
             {
-                this.mfAddGridMessage(ex.ToString());
+                mfAddGridMessage(ex.ToString());
             }
         }
         /// <summary>
-        /// 밀도계
+        /// 전주 밀도계
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Density_03(string strFilePath)
         {
             try
             {
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
-                {
-                    // Auto-detect format, supports:
-                    //  - Binary Excel files (2.0-2003 format; *.xls)
-                    //  - OpenXml Excel files (2007 format; *.xlsx)
-                    using (var reader = ExcelReaderFactory.CreateReader(stream))
-                    {
-                        // Choose one of either 1 or 2:
-
-                        //// 1. Use the reader methods
-                        //do
-                        //{
-                        //    while (reader.Read())
-                        //    {
-                        //        // reader.GetDouble(0);
-                        //    }
-                        //} while (reader.NextResult());
-
-                        // 2. Use the AsDataSet extension method
-                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
-                        {
-                            // Gets or sets a value indicating whether to set the DataColumn.DataType 
-                            // property in a second pass.
-                            UseColumnDataType = true,
-
-                            // Gets or sets a callback to determine whether to include the current sheet
-                            // in the DataSet. Called once per sheet before ConfigureDataTable.
-                            FilterSheet = (tableReader, sheetIndex) => true,
-
-                            // Gets or sets a callback to obtain configuration options for a DataTable. 
-                            ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
-                            {
-                                // Gets or sets a value indicating the prefix of generated column names.
-                                EmptyColumnNamePrefix = "Column",
-
-                                // Gets or sets a value indicating whether to use a row from the 
-                                // data as column names.
-                                UseHeaderRow = true,
-
-                                // Gets or sets a callback to determine which row is the header row. 
-                                // Only called when UseHeaderRow = true.
-                                ReadHeaderRow = (rowReader) => {
-                                    // F.ex skip the first row and use the 2nd row as column headers:
-                                    rowReader.Read();
-                                    rowReader.Read();
-                                },
-
-                                // Gets or sets a callback to determine whether to include the 
-                                // current row in the DataTable.
-                                FilterRow = (rowReader) => {
-                                    return true;
-                                },
-
-                                // Gets or sets a callback to determine whether to include the specific
-                                // column in the DataTable. Called once per column after reading the 
-                                // headers.
-                                FilterColumn = (rowReader, columnIndex) => {
-                                    return true;
-                                }
-                            }
-                        });
-                    }
-                }
+                // RowIndex : 2
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
             }
             catch (Exception ex)
             {
-                this.mfAddGridMessage(ex.ToString());
+                mfAddGridMessage(ex.ToString());
             }
         }
         /// <summary>
-        /// TOC
+        /// 전주 TOC
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_TOC_03(string strFilePath)
         {
             try
             {
-                using (var reader = new StreamReader(strFilePath))
-                {
-                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-                    {
-                        //csv.Configuration.HasHeaderRecord = false;
-                        //csv.Configuration.RegisterClassMap<CationMapper>();
-                        //var records = csv.GetRecords<CationMapper>().ToList();
-                        //foreach (var dd in records)
-                        //{
-
-                        //}
-                        csv.Configuration.MissingFieldFound = null;
-                        csv.Configuration.IgnoreBlankLines = true;
-
-                        csv.Configuration.RegisterClassMap<CationMapper>();
-
-                        var records = csv.GetRecords<Cation>().ToList();
-                    }
-                }
+                // RowIndex : 10
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
             }
             catch (Exception ex)
             {
-                this.mfAddGridMessage(ex.ToString());
+                mfAddGridMessage(ex.ToString());
             }
         }
         /// <summary>
-        /// 밀도계
+        /// 울산 밀도계
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Density_05(string strFilePath)
         {
             try
             {
+                // RowIndex : 2
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+            }
+            catch (Exception ex)
+            {
+                mfAddGridMessage(ex.ToString());
+            }
+        }
+        /// <summary>
+        /// 울산 밀도계(A-M90)
+        /// </summary>
+        /// <param name="strFilePath">파일경로</param>
+        private void mfParsing_Cation_05_M90(string strFilePath)
+        {
+            try
+            {
+                // RowIndex : 4
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+            }
+            catch (Exception ex)
+            {
+                mfAddGridMessage(ex.ToString());
+            }
+        }
+        /// <summary>
+        /// 울산 밀도계(7900)
+        /// </summary>
+        /// <param name="strFilePath">파일경로</param>
+        private void mfParsing_Cation_05_7900(string strFilePath)
+        {
+            try
+            {
+                // RowIndex : 0
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+            }
+            catch (Exception ex)
+            {
+                mfAddGridMessage(ex.ToString());
+            }
+        }
+        /// <summary>
+        /// 울산 음이온(ILC)
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        private void mfParsing_Anion_05(string strFilePath)
+        {
+            try
+            {
                 using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
                 {
-                    // Auto-detect format, supports:
-                    //  - Binary Excel files (2.0-2003 format; *.xls)
-                    //  - OpenXml Excel files (2007 format; *.xlsx)
                     using (var reader = ExcelReaderFactory.CreateReader(stream))
                     {
-                        // 2. Use the AsDataSet extension method
-                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        string strSampleID;
+                        DateTime dateSampleDate;
+                        bool bolBreak = false;
+                        do
                         {
-                            // Gets or sets a value indicating whether to set the DataColumn.DataType 
-                            // property in a second pass.
-                            UseColumnDataType = true,
-
-                            // Gets or sets a callback to determine whether to include the current sheet
-                            // in the DataSet. Called once per sheet before ConfigureDataTable.
-                            FilterSheet = (tableReader, sheetIndex) => true,
-
-                            // Gets or sets a callback to obtain configuration options for a DataTable. 
-                            ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                            while (reader.Read())
                             {
-                                // Gets or sets a value indicating the prefix of generated column names.
-                                EmptyColumnNamePrefix = "Column",
+                                switch (reader.GetValue(0) ?? "")
+                                {
+                                    case "Sample Name:":
+                                        strSampleID = reader.GetString(2);
+                                        break;
+                                    case "Recording Time:":
+                                        dateSampleDate = reader.GetDateTime(2);
+                                        bolBreak = true;
+                                        break;
+                                }
 
-                                // Gets or sets a value indicating whether to use a row from the 
-                                // data as column names.
+                                if (bolBreak)
+                                {
+                                    break;
+                                }
+
+                            }
+                        } while (reader.NextResult());
+
+                        DataSet dsData = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        {
+                            ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                            {
+                                EmptyColumnNamePrefix = "Column",
                                 UseHeaderRow = true,
 
-                                // Gets or sets a callback to determine which row is the header row. 
-                                // Only called when UseHeaderRow = true.
-                                ReadHeaderRow = (rowReader) => {
-                                    // F.ex skip the first row and use the 2nd row as column headers:
-                                    rowReader.Read();
-                                    rowReader.Read();
-                                },
-
-                                // Gets or sets a callback to determine whether to include the 
-                                // current row in the DataTable.
-                                FilterRow = (rowReader) => {
-                                    return true;
-                                },
-
-                                // Gets or sets a callback to determine whether to include the specific
-                                // column in the DataTable. Called once per column after reading the 
-                                // headers.
-                                FilterColumn = (rowReader, columnIndex) => {
-                                    return true;
+                                ReadHeaderRow = (rowReader) =>
+                                {
+                                    // RowIndex : 26
+                                    for (int i = 0; i < m_intRowIndex; i++)
+                                    {
+                                        rowReader.Read();
+                                    }
                                 }
                             }
                         });
@@ -766,117 +667,115 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                this.mfAddGridMessage(ex.ToString());
+                mfAddGridMessage(ex.ToString());
+            }
+        }
+        /// <summary>
+        /// 파일읽기
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        /// <param name="intRowIndex"></param>
+        /// <returns></returns>
+        private DataSet mfReadFile(string strFilePath, int intRowIndex = 0)
+        {
+            try
+            {
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    if (Path.GetExtension(strFilePath).ToUpper().Equals(".XLS") || Path.GetExtension(strFilePath).ToUpper().Equals(".XLSX"))
+                    {
+                        using (var reader = ExcelReaderFactory.CreateReader(stream))
+                        {
+                            var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                            {
+                                ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                                {
+                                    EmptyColumnNamePrefix = "Column",
+                                    UseHeaderRow = true,
+
+                                    ReadHeaderRow = (rowReader) =>
+                                    {
+                                        // F.ex skip the first row and use the 2nd row as column headers:
+                                        for (int i = 0; i < intRowIndex; i++)
+                                        {
+                                            rowReader.Read();
+                                        }
+                                    },
+                                    FilterRow = rowReader =>
+                                    {
+                                        var hasData = false;
+                                        for (var i = 0; i < rowReader.FieldCount; i++)
+                                        {
+                                            if (rowReader[i] == null || string.IsNullOrEmpty(rowReader[i].ToString()))
+                                            {
+                                                continue;
+                                            }
+
+                                            hasData = true;
+                                            break;
+                                        }
+
+                                        return hasData;
+                                    },
+                                }
+                            });
+
+                            return result;
+                        }
+                    }
+                    else if (Path.GetExtension(strFilePath).ToUpper().Equals(".CSV") || Path.GetExtension(strFilePath).ToUpper().Equals(".REP") || Path.GetExtension(strFilePath).ToUpper().Equals(".TXT"))
+                    {
+                        using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
+                        {
+                            var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                            {
+                                ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                                {
+                                    EmptyColumnNamePrefix = "Column",
+                                    UseHeaderRow = true,
+
+                                    ReadHeaderRow = (rowReader) =>
+                                    {
+                                        // F.ex skip the first row and use the 2nd row as column headers:
+                                        for (int i = 0; i < intRowIndex; i++)
+                                        {
+                                            rowReader.Read();
+                                        }
+                                    },
+                                    FilterRow = rowReader =>
+                                    {
+                                        var hasData = false;
+                                        for (var i = 0; i < rowReader.FieldCount; i++)
+                                        {
+                                            if (rowReader[i] == null || string.IsNullOrEmpty(rowReader[i].ToString()))
+                                            {
+                                                continue;
+                                            }
+
+                                            hasData = true;
+                                            break;
+                                        }
+
+                                        return hasData;
+                                    },
+                                }
+                            });
+                            return result;
+                        }
+                    }
+                    else
+                    {
+                        throw new System.ApplicationException("Invalid File");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                mfAddGridMessage(ex.ToString());
+                throw ex;
             }
         }
         #endregion File Parsing
         #endregion Method
-
-        #region 양이온
-        [Serializable]
-        public class Cation
-        {
-            public string IS { get; set; }
-            public string Analyte { get; set; }
-            public string Mass { get; set; }
-            public string Conc { get; set; }
-            public string Unit { get; set; }
-            public string SD { get; set; }
-            public string RSD1 { get; set; }
-            public string Intensity { get; set; }
-            public string RSD2 { get; set; }
-            public string BlankIntens { get; set; }
-            public string Mode { get; set; }
-        }
-
-        public class CationMapper : ClassMap<Cation>
-        {
-            public CationMapper()
-            {
-                //Map(m => m.IS).Name("IS").Index(0);
-                //Map(m => m.Analyte).Name("Analyte").Index(1);
-                //Map(m => m.Mass).Name("Mass").Index(2);
-                //Map(m => m.Conc).Name("Conc.").Index(3);
-                //Map(m => m.Unit).Name("Unit").Index(4);
-                //Map(m => m.SD).Name("SD").Index(5);
-                //Map(m => m.RSD1).Name("RSD").Index(6);
-                //Map(m => m.Intensity).Name("Intensity").Index(7);
-                //Map(m => m.RSD2).Name("RSD1").Index(8);
-                //Map(m => m.BlankIntens).Name("Blank Intens.").Index(9);
-                //Map(m => m.Mode).Name("Mode").Index(10);
-
-                //Map(m => m.IS).Index(0).Name("Analyte");
-                //Map(m => m.Analyte).Index(1).Name("Mass");
-                //Map(m => m.Mass).Index(2).Name("Conc.");
-                //Map(m => m.Conc).Index(3).Name("Unit");
-                //Map(m => m.Unit).Index(4).Name("SD");
-                //Map(m => m.SD).Index(5).Name("RSD");
-                //Map(m => m.RSD1).Index(6).Name("Intensity");
-                //Map(m => m.Intensity).Index(7).Name("RSD");
-                //Map(m => m.RSD2).Index(8).Name("Blank Intens.");
-                //Map(m => m.BlankIntens).Index(9).Name("Mode");
-                //Map(m => m.Mode).Index(10);
-
-                Map(m => m.IS).Index(0);
-                Map(m => m.Analyte).Index(1);
-                Map(m => m.Mass).Index(2);
-                Map(m => m.Conc).Index(3);
-                Map(m => m.Unit).Index(4);
-                Map(m => m.SD).Index(5);
-                Map(m => m.RSD1).Index(6);
-                Map(m => m.Intensity).Index(7);
-                Map(m => m.RSD2).Index(8);
-                Map(m => m.BlankIntens).Index(9);
-                Map(m => m.Mode).Index(10);
-            }
-        }
-        #endregion 양이온
-
-        #region 음이온
-        [Serializable]
-        public class Anion
-        {
-            public string InspectDate { get; set; }
-            public string SampleName { get; set; }
-            public string Info { get; set; }
-            public decimal? F { get; set; }
-            public decimal? CI { get; set; }
-            public decimal? NO2 { get; set; }
-            public decimal? Br { get; set; }
-            public decimal? NO3 { get; set; }
-            public decimal? PO4 { get; set; }
-            public decimal? SO4 { get; set; }
-        }
-        //public class Anion
-        //{
-        //    public string InspectDate { get; set; }
-        //    public string SampleName { get; set; }
-        //    public string Info { get; set; }
-        //    public string F { get; set; }
-        //    public string CI { get; set; }
-        //    public string NO2 { get; set; }
-        //    public string Br { get; set; }
-        //    public string NO3 { get; set; }
-        //    public string PO4 { get; set; }
-        //    public string SO4 { get; set; }
-        //}
-
-        public class AnionMapper : ClassMap<Anion>
-        {
-            public AnionMapper()
-            {
-                Map(m => m.InspectDate).Name("Determination start").Index(0);
-                Map(m => m.SampleName).Name("Ident").Index(1);
-                Map(m => m.Info).Name("Info 1").Index(2);
-                Map(m => m.F).Name("Anoin.F.Concentration").Index(3);
-                Map(m => m.CI).Name("Anoin.Cl.Concentration").Index(4);
-                Map(m => m.NO2).Name("Anoin.NO2.Concentration").Index(5);
-                Map(m => m.Br).Name("Anoin.Br.Concentration").Index(6);
-                Map(m => m.NO3).Name("Anoin.NO3.Concentration").Index(7);
-                Map(m => m.PO4).Name("Anoin.PO4.Concentration").Index(8);
-                Map(m => m.SO4).Name("Anoin.SO4.Concentration").Index(9);
-            }
-        }
-        #endregion 음이온
     }
 }

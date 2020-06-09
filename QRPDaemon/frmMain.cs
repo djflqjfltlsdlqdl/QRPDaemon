@@ -148,7 +148,7 @@ namespace QRPDaemon
                         file.MeasureName = dgvENVList.Rows[i].Cells["MeasureName"].Value.ToString();
                         file.OriginFilePath = dgvENVList.Rows[i].Cells["OriginFilePath"].Value.ToString();
                         file.TargetFilePath = dgvENVList.Rows[i].Cells["TargetFilePath"].Value.ToString();
-                        file.Intervar = dgvENVList.Rows[i].Cells["Interval"].Value.ToString();
+                        file.Intervar = dgvENVList.Rows[i].Cells["Interval"].Value.ToInt();
                         file.Dock = DockStyle.Fill;
                         file.Show();
 
