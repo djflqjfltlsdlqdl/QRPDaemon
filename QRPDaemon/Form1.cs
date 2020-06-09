@@ -30,6 +30,13 @@ namespace QRPDaemon
             ultraButton2.Click += UltraButton2_Click;
             ultraButton3.Click += UltraButton3_Click;
             ultraButton4.Click += UltraButton4_Click;
+
+            button1.Click += Button1_Click;
+            button2.Click += Button2_Click;
+            button3.Click += Button3_Click;
+            button4.Click += Button4_Click;
+            button5.Click += Button5_Click;
+            button6.Click += Button6_Click;
         }
 
         private void UltraButton1_Click(object sender, EventArgs e)
@@ -37,42 +44,50 @@ namespace QRPDaemon
             try
             {
                 ultraTextEditor1.Clear();
-
-                //if (System.IO.File.Exists(CommonCode.EnvXMLFileName))
-                //{
-                //    #region Var
-                //    System.Xml.XmlDocument xmlDocHeader = new System.Xml.XmlDocument();
-                //    System.Xml.XmlNode node;
-                //    #endregion Var
-
-                //    // 기본 XML 파일 읽기
-                //    xmlDocHeader.Load(CommonCode.EnvXMLFileName);
-
-                //    node = xmlDocHeader.SelectSingleNode("Files/File").Attributes()
-                //}
                 StringBuilder sb = new StringBuilder();
                 string strValue;
-                string strSampleName;
+                string strSampleID;
+                string strSampleDate;
+                string strSampleDate_01;
+                string strSampleDate_02;
+
                 using (var reader = new StreamReader(fn_FileSelect()))
                 {
                     using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
                     {
-                        csv.Configuration.HasHeaderRecord = false;
-                         
                         while (csv.Read())
                         {
                             sb.AppendFormat("{0, 3} : {1}", csv.Context.Row, csv.Context.RawRecord);
 
                             if (csv.TryGetField<string>(0, out strValue))
                             {
-                                switch (strValue)
+                                if (strValue.Equals("Sample ID:"))
                                 {
-                                    case "Sample ID:":
-                                        strSampleName = strValue;
-                                        break;
+                                    csv.TryGetField<string>(1, out strSampleID);
+                                }
+                                else if (strValue.Equals("Sample Date/Time:"))
+                                {
+                                    csv.TryGetField<string>(2, out strSampleDate_01);
+                                    csv.TryGetField<string>(3, out strSampleDate_02);
+                                    strSampleDate = strSampleDate_01 + strSampleDate_02;
+                                    DateTime dtSampleDate;
+                                    DateTime.TryParse(strSampleDate, out dtSampleDate);
+                                }
+                                else if (strValue.StartsWith("Results"))
+                                {
+                                    csv.Read();
+                                    csv.ReadHeader();
+                                    break;
                                 }
                             }
                         }
+                        csv.Configuration.RegisterClassMap<CationMapper>();
+                        var records = csv.GetRecords<Cation>().ToList();
+                        foreach (var dd in records)
+                        {
+
+                        }
+                        ultraGrid1.SetDataBinding(records, string.Empty);
 
                         ultraTextEditor1.Value = sb.ToString();
                     }
@@ -233,12 +248,62 @@ namespace QRPDaemon
         {
             try
             {
+                using (var reader = new StreamReader(fn_FileSelect()))
+                {
+                    using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    {
+                        //csv.Configuration.HasHeaderRecord = false;
+                        //csv.Configuration.RegisterClassMap<CationMapper>();
+                        //var records = csv.GetRecords<CationMapper>().ToList();
+                        //foreach (var dd in records)
+                        //{
 
+                        //}
+                        csv.Configuration.MissingFieldFound = null;
+                        csv.Configuration.IgnoreBlankLines = true;
+
+                        csv.Configuration.RegisterClassMap<CationMapper>();
+
+                        var records = csv.GetRecords<Cation>().ToList();
+
+                        ultraGrid1.SetDataBinding(records, string.Empty);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 ultraTextEditor1.Value = ex.ToString();
             }
+        }
+
+        private void Button1_Click(object sender, EventArgs e)
+        {
+            mfParsing_Density_05(fn_FileSelect());
+        }
+
+        private void Button2_Click(object sender, EventArgs e)
+        {
+            mfParsing_Cation_05_7900(fn_FileSelect());
+        }
+
+        private void Button3_Click(object sender, EventArgs e)
+        {
+            mfParsing_Cation_05_M90(fn_FileSelect());
+        }
+
+        private void Button4_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Button5_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void Button6_Click(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
         }
 
         private string fn_FileSelect(string strFilter = null)
@@ -266,6 +331,226 @@ namespace QRPDaemon
             }
         }
 
+        /// <summary>
+        /// 울산 밀도계
+        /// </summary>
+        /// <param name="strFilePath">파일경로</param>
+        private void mfParsing_Density_05(string strFilePath)
+        {
+            try
+            {
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    // Auto-detect format, supports:
+                    //  - Binary Excel files (2.0-2003 format; *.xls)
+                    //  - OpenXml Excel files (2007 format; *.xlsx)
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        // 2. Use the AsDataSet extension method
+                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        {
+                            // Gets or sets a value indicating whether to set the DataColumn.DataType 
+                            // property in a second pass.
+                            UseColumnDataType = true,
+
+                            // Gets or sets a callback to determine whether to include the current sheet
+                            // in the DataSet. Called once per sheet before ConfigureDataTable.
+                            FilterSheet = (tableReader, sheetIndex) => true,
+
+                            // Gets or sets a callback to obtain configuration options for a DataTable. 
+                            ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                            {
+                                // Gets or sets a value indicating the prefix of generated column names.
+                                EmptyColumnNamePrefix = "Column",
+
+                                // Gets or sets a value indicating whether to use a row from the 
+                                // data as column names.
+                                UseHeaderRow = true,
+
+                                // Gets or sets a callback to determine which row is the header row. 
+                                // Only called when UseHeaderRow = true.
+                                ReadHeaderRow = (rowReader) => {
+                                    // F.ex skip the first row and use the 2nd row as column headers:
+                                    rowReader.Read();
+                                    rowReader.Read();
+                                },
+
+                                // Gets or sets a callback to determine whether to include the 
+                                // current row in the DataTable.
+                                FilterRow = (rowReader) => {
+                                    return true;
+                                },
+
+                                // Gets or sets a callback to determine whether to include the specific
+                                // column in the DataTable. Called once per column after reading the 
+                                // headers.
+                                FilterColumn = (rowReader, columnIndex) => {
+                                    return true;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                //this.mfAddGridMessage(ex.ToString());
+                ultraTextEditor1.Text = ex.ToString();
+            }
+        }
+        /// <summary>
+        /// 울산 ICP-MS(7900)
+        /// </summary>
+        /// <param name="strFilePath">파일경로</param>
+        private void mfParsing_Cation_05_7900(string strFilePath)
+        {
+            try
+            {
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        // 2. Use the AsDataSet extension method
+                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        {
+                            // Gets or sets a value indicating whether to set the DataColumn.DataType 
+                            // property in a second pass.
+                            UseColumnDataType = true,
+
+                            // Gets or sets a callback to determine whether to include the current sheet
+                            // in the DataSet. Called once per sheet before ConfigureDataTable.
+                            FilterSheet = (tableReader, sheetIndex) => true,
+
+                            // Gets or sets a callback to obtain configuration options for a DataTable. 
+                            ConfigureDataTable = (tableReader) => new ExcelDataTableConfiguration()
+                            {
+                                // Gets or sets a value indicating the prefix of generated column names.
+                                EmptyColumnNamePrefix = "Column",
+
+                                // Gets or sets a value indicating whether to use a row from the 
+                                // data as column names.
+                                UseHeaderRow = true,
+
+                                // Gets or sets a callback to determine which row is the header row. 
+                                // Only called when UseHeaderRow = true.
+                                ReadHeaderRow = (rowReader) => {
+                                    // F.ex skip the first row and use the 2nd row as column headers:
+                                    //rowReader.Read();
+                                    //rowReader.Read();
+                                },
+
+                                // Gets or sets a callback to determine whether to include the 
+                                // current row in the DataTable.
+                                FilterRow = (rowReader) => {
+                                    return true;
+                                },
+
+                                // Gets or sets a callback to determine whether to include the specific
+                                // column in the DataTable. Called once per column after reading the 
+                                // headers.
+                                FilterColumn = (rowReader, columnIndex) => {
+                                    return true;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                //this.mfAddGridMessage(ex.ToString());
+                ultraTextEditor1.Text = ex.ToString();
+            }
+        }
+        /// <summary>
+        /// 울산 ICP-MS(A-M90)
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        private void mfParsing_Cation_05_M90(string strFilePath)
+        {
+            try
+            {
+                DataSet dsData = mfReadFile(strFilePath, 4);
+                if(dsData != null && dsData.Tables.Count > 0)
+                {
+                    ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
+                }
+            }
+            catch (Exception ex)
+            {
+                //this.mfAddGridMessage(ex.ToString());
+                ultraTextEditor1.Text = ex.ToString();
+            }
+        }
+
+        private DataSet mfReadFile(string strFilePath, int intRowIndex = 0)
+        {
+            try
+            {
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    if (Path.GetExtension(strFilePath).ToUpper().Equals(".XLS") || Path.GetExtension(strFilePath).ToUpper().Equals(".XLSX"))
+                    {
+                        using (var reader = ExcelReaderFactory.CreateReader(stream))
+                        {
+                            var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                            {
+                                ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                                {
+                                    EmptyColumnNamePrefix = "Column",
+                                    UseHeaderRow = true,
+
+                                    ReadHeaderRow = (rowReader) =>
+                                    {
+                                        // F.ex skip the first row and use the 2nd row as column headers:
+                                        for (int i = 0; i < intRowIndex; i++)
+                                        {
+                                            rowReader.Read();
+                                        }
+                                    }
+                                }
+                            });
+
+                            return result;
+                        }
+                    }
+                    else if (Path.GetExtension(strFilePath).ToUpper().Equals(".CSV") || Path.GetExtension(strFilePath).ToUpper().Equals(".REP") || Path.GetExtension(strFilePath).ToUpper().Equals(".TXT"))
+                    {
+                        using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
+                        {
+                            var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                            {
+                                ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                                {
+                                    EmptyColumnNamePrefix = "Column",
+                                    UseHeaderRow = true,
+
+                                    ReadHeaderRow = (rowReader) =>
+                                    {
+                                        // F.ex skip the first row and use the 2nd row as column headers:
+                                        for (int i = 0; i < intRowIndex; i++)
+                                        {
+                                            rowReader.Read();
+                                        }
+                                    }
+                                }
+                            });
+                            return result;
+                        }
+                    }
+                    else
+                    {
+                        throw new System.ApplicationException("Invalid File");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                //this.mfAddGridMessage(ex.ToString());
+                ultraTextEditor1.Text = ex.ToString();
+                throw ex;
+            }
+        }
         #region 사용안함
         /*
         /// <summary>
@@ -409,6 +694,56 @@ namespace QRPDaemon
         {
             public string IS { get; set; }
             public string Analyte { get; set; }
+            public string Mass { get; set; }
+            public string Conc { get; set; }
+            public string Unit { get; set; }
+            public string SD { get; set; }
+            public string RSD1 { get; set; }
+            public string Intensity { get; set; }
+            public string RSD2 { get; set; }
+            public string BlankIntens { get; set; }
+            public string Mode { get; set; }
+        }
+
+        public class CationMapper : ClassMap<Cation>
+        {
+            public CationMapper()
+            {
+                //Map(m => m.IS).Name("IS").Index(0);
+                //Map(m => m.Analyte).Name("Analyte").Index(1);
+                //Map(m => m.Mass).Name("Mass").Index(2);
+                //Map(m => m.Conc).Name("Conc.").Index(3);
+                //Map(m => m.Unit).Name("Unit").Index(4);
+                //Map(m => m.SD).Name("SD").Index(5);
+                //Map(m => m.RSD1).Name("RSD").Index(6);
+                //Map(m => m.Intensity).Name("Intensity").Index(7);
+                //Map(m => m.RSD2).Name("RSD1").Index(8);
+                //Map(m => m.BlankIntens).Name("Blank Intens.").Index(9);
+                //Map(m => m.Mode).Name("Mode").Index(10);
+                //Map(m => m.IS).Index(0).Name("Analyte");
+                //Map(m => m.Analyte).Index(1).Name("Mass");
+                //Map(m => m.Mass).Index(2).Name("Conc.");
+                //Map(m => m.Conc).Index(3).Name("Unit");
+                //Map(m => m.Unit).Index(4).Name("SD");
+                //Map(m => m.SD).Index(5).Name("RSD");
+                //Map(m => m.RSD1).Index(6).Name("Intensity");
+                //Map(m => m.Intensity).Index(7).Name("RSD");
+                //Map(m => m.RSD2).Index(8).Name("Blank Intens.");
+                //Map(m => m.BlankIntens).Index(9).Name("Mode");
+                //Map(m => m.Mode).Index(10);
+
+                Map(m => m.IS).Index(0);
+                Map(m => m.Analyte).Index(1);
+                Map(m => m.Mass).Index(2);
+                Map(m => m.Conc).Index(3);
+                Map(m => m.Unit).Index(4);
+                Map(m => m.SD).Index(5);
+                Map(m => m.RSD1).Index(6);
+                Map(m => m.Intensity).Index(7);
+                Map(m => m.RSD2).Index(8);
+                Map(m => m.BlankIntens).Index(9);
+                Map(m => m.Mode).Index(10);
+            }
         }
         #endregion 양이온
 

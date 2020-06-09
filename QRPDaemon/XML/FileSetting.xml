@@ -1,13 +1,3 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<Files>
-	<File Type =".rep" Separator="," NewLine="\n">
-		<SampleID row="2" col="2">
-		</SampleID>
-		<ColumnName row="19" col="0">
-		</ColumnName>
-		<Data>
-			<row>20</row>
-			<col>0</col>
-		</Data>
-	</File>
-</Files>
+<EnvSettings>
+</EnvSettings>
