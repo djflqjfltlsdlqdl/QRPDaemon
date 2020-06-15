@@ -28,6 +28,7 @@ namespace QRPDaemon.Control
         private string m_strMeasureName = string.Empty;
         private string m_strFileExtension = string.Empty;
         private int m_intRowIndex = 0;
+        private DateTime m_dateLastDate = DateTime.MinValue;
         /// <summary>
         /// 진행상태
         /// </summary>
@@ -111,7 +112,7 @@ namespace QRPDaemon.Control
             mfReadLogData();
 
             clsScheduledTimer st = new clsScheduledTimer();
-            //st.SetTime(new TimeSpan(0, 0, 0), )
+            st.SetTime(new TimeSpan(0, 0, 0), mfDeleteGrid);
         }
 
         #region Initialize
@@ -135,6 +136,9 @@ namespace QRPDaemon.Control
 
             dgvLogList.Columns["IFMessage"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             #endregion
+
+            txtMeasureName.Text = m_strMeasureName;
+            txtOriginFilePath.Text = m_strOriginFilePath;
         }
 
         #endregion Initialize
@@ -218,12 +222,6 @@ namespace QRPDaemon.Control
                     {
                         mfSetToolStripStatusLabel("Start...");
 
-                        for(int i=0; i<5; i++)
-                        {
-                            System.Threading.Thread.Sleep(5000);
-                            mfAddGridMessage(string.Format("처리완료{0}", i));
-                        }
-
                         System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
                         if (diInfo.Exists)
                         {
@@ -243,6 +241,7 @@ namespace QRPDaemon.Control
                             {
                                 if (fi.Extension.Equals(m_strFileExtension))
                                 {
+                                    mfAddGridMessage(string.Format("1.Parsing Start : {0}", fi.FullName));
                                     if (m_strPlantCode.Equals("03"))
                                     {
                                         switch (m_strMeasureName)
@@ -268,13 +267,16 @@ namespace QRPDaemon.Control
                                             case "밀도계":
                                                 mfParsing_Density_05(fi.FullName);
                                                 break;
-                                            //case "TOC":
-                                            //    mfParsing_TOC(fi.FullName);
-                                            //    break;
+                                            case "TOC":
+                                                mfParsing_TOC_05(fi.FullName);
+                                                break;
                                             case "ICP-MS(7900)":
                                                 mfParsing_Cation_05_7900(fi.FullName);
                                                 break;
                                             case "ICP-MS(A-M90)":
+                                                mfParsing_Cation_05_M90(fi.FullName);
+                                                break;
+                                            case "ICP-OES":
                                                 mfParsing_Cation_05_M90(fi.FullName);
                                                 break;
                                             case "ILC":
@@ -282,8 +284,13 @@ namespace QRPDaemon.Control
                                                 break;
                                         }
                                     }
+                                    mfAddGridMessage(string.Format("2.Parsing End : {0}", fi.FullName));
                                 }
-                                fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
+
+                                //fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
+                                //fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
+
+                                mfAddGridMessage(string.Format("3.File BackUp : {0}", fi.FullName));
                             }
                         }
                         else
@@ -326,8 +333,8 @@ namespace QRPDaemon.Control
 
                 tsStatusLabel.Text = "시작...";
 
-                m_timerMain.Start();
-                m_timerSub.Start();
+                //m_timerMain.Start();
+                //m_timerSub.Start();
 
                 if (!m_bolProgFlag)
                 {
@@ -354,12 +361,18 @@ namespace QRPDaemon.Control
         {
             try
             {
-                m_timerMain.Tick -= new EventHandler(m_timerMain_Tick);
-                m_timerSub.Tick -= new EventHandler(m_timerSub_Tick);
+                if (m_timerMain != null)
+                {
+                    m_timerMain.Tick -= new EventHandler(m_timerMain_Tick);
+                    m_timerMain.Stop();
+                }
+                if (m_timerSub != null)
+                {
+                    m_timerSub.Tick -= new EventHandler(m_timerSub_Tick);
+                    m_timerSub.Stop();
+                }
 
                 m_bolProgFlag = false;
-                m_timerMain.Stop();
-                m_timerSub.Stop();
 
                 m_timerMain = null;
                 m_timerSub = null;
@@ -442,14 +455,21 @@ namespace QRPDaemon.Control
                 MessageBox.Show(ex.ToString());
             }
         }
-
+        /// <summary>
+        /// Log 정보 삭제
+        /// </summary>
         private void mfDeleteGrid()
         {
+            dgvLogList.mfInvokeIfRequired(() =>
+            {
+                dgvLogList.Rows.Clear();
+            });
         }
 
         #region File Parsing
         /// <summary>
         /// 전주 양이온
+        /// 개별
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Cation_03(string strFilePath)
@@ -504,7 +524,10 @@ namespace QRPDaemon.Control
                                 }
                             }
                         });
+
+                        reader.Close();
                     }
+                    stream.Close();
                 }
             }
             catch (Exception ex)
@@ -514,12 +537,14 @@ namespace QRPDaemon.Control
         }
         /// <summary>
         /// 전주 음이온
+        /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Anion_03(string strFilePath)
         {
             try
             {
+                // RowIndex : 0
                 DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
             }
             catch (Exception ex)
@@ -529,6 +554,7 @@ namespace QRPDaemon.Control
         }
         /// <summary>
         /// 전주 밀도계
+        /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Density_03(string strFilePath)
@@ -545,6 +571,7 @@ namespace QRPDaemon.Control
         }
         /// <summary>
         /// 전주 TOC
+        /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_TOC_03(string strFilePath)
@@ -561,6 +588,7 @@ namespace QRPDaemon.Control
         }
         /// <summary>
         /// 울산 밀도계
+        /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Density_05(string strFilePath)
@@ -576,7 +604,8 @@ namespace QRPDaemon.Control
             }
         }
         /// <summary>
-        /// 울산 밀도계(A-M90)
+        /// 울산 양이온(A-M90)
+        /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Cation_05_M90(string strFilePath)
@@ -592,7 +621,8 @@ namespace QRPDaemon.Control
             }
         }
         /// <summary>
-        /// 울산 밀도계(7900)
+        /// 울산 양이온(7900)
+        /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
         private void mfParsing_Cation_05_7900(string strFilePath)
@@ -608,7 +638,25 @@ namespace QRPDaemon.Control
             }
         }
         /// <summary>
+        /// 울산 양이온 ICP-OES
+        /// 공통
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        private void mfParsing_Cation_05_OES(string strFilePath)
+        {
+            try
+            {
+                // RowIndex : 2
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+            }
+            catch (Exception ex)
+            {
+                mfAddGridMessage(ex.ToString());
+            }
+        }
+        /// <summary>
         /// 울산 음이온(ILC)
+        /// 개별
         /// </summary>
         /// <param name="strFilePath"></param>
         private void mfParsing_Anion_05(string strFilePath)
@@ -671,6 +719,27 @@ namespace QRPDaemon.Control
             }
         }
         /// <summary>
+        /// 울산 TOC
+        /// 공통
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        private void mfParsing_TOC_05(string strFilePath)
+        {
+            try
+            {
+                // RowIndex : 10
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+                if (dsData != null && dsData.Tables.Count > 0)
+                {
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+                mfAddGridMessage(ex.ToString());
+            }
+        }
+        /// <summary>
         /// 파일읽기
         /// </summary>
         /// <param name="strFilePath"></param>
@@ -719,13 +788,40 @@ namespace QRPDaemon.Control
                                     },
                                 }
                             });
+                            reader.Close();
+                            stream.Close();
 
                             return result;
                         }
                     }
                     else if (Path.GetExtension(strFilePath).ToUpper().Equals(".CSV") || Path.GetExtension(strFilePath).ToUpper().Equals(".REP") || Path.GetExtension(strFilePath).ToUpper().Equals(".TXT"))
                     {
-                        using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
+                        using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
+                        {
+                            // Gets or sets the encoding to use when the input XLS lacks a CodePage
+                            // record, or when the input CSV lacks a BOM and does not parse as UTF8. 
+                            // Default: cp1252 (XLS BIFF2-5 and CSV only)
+                            FallbackEncoding = Encoding.GetEncoding(949),
+
+                            //// Gets or sets the password used to open password protected workbooks.
+                            //Password = "password",
+
+                            //// Gets or sets an array of CSV separator candidates. The reader 
+                            //// autodetects which best fits the input data. Default: , ; TAB | # 
+                            //// (CSV only)
+                            //AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
+
+                            //// Gets or sets a value indicating whether to leave the stream open after
+                            //// the IExcelDataReader object is disposed. Default: false
+                            //LeaveOpen = false,
+
+                            //// Gets or sets a value indicating the number of rows to analyze for
+                            //// encoding, separator and field count in a CSV. When set, this option
+                            //// causes the IExcelDataReader.RowCount property to throw an exception.
+                            //// Default: 0 - analyzes the entire file (CSV only, has no effect on other
+                            //// formats)
+                            //AnalyzeInitialCsvRows = 0,
+                        }))
                         {
                             var result = reader.AsDataSet(new ExcelDataSetConfiguration()
                             {
@@ -760,6 +856,9 @@ namespace QRPDaemon.Control
                                     },
                                 }
                             });
+                            reader.Close();
+                            stream.Close();
+
                             return result;
                         }
                     }

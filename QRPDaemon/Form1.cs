@@ -89,7 +89,10 @@ namespace QRPDaemon
                                 }
                             }
                         });
+                        
+                        ultraGrid1.SetDataBinding(result, string.Empty);
                     }
+
                 }
             }
             catch (Exception ex)
@@ -163,17 +166,17 @@ namespace QRPDaemon
 
         private void Button4_Click(object sender, EventArgs e)
         {
-            mfParsing_Anion_05(fn_FileSelect());
+            mfParsing_Cation_05_OES(fn_FileSelect());
         }
 
         private void Button5_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            mfParsing_Anion_05(fn_FileSelect());
         }
 
         private void Button6_Click(object sender, EventArgs e)
         {
-            throw new NotImplementedException();
+            mfParsing_TOC_05(fn_FileSelect());
         }
 
         private string fn_FileSelect(string strFilter = null)
@@ -249,8 +252,29 @@ namespace QRPDaemon
         {
             try
             {
-                DataSet dsData = mfReadFile(strFilePath, 4);
+                DataSet dsData = mfReadFile(strFilePath, 2);
                 if(dsData != null && dsData.Tables.Count > 0)
+                {
+                    ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
+                }
+            }
+            catch (Exception ex)
+            {
+                //this.mfAddGridMessage(ex.ToString());
+                ultraTextEditor1.Text = ex.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 울산 ICP-OES
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        private void mfParsing_Cation_05_OES(string strFilePath)
+        {
+            try
+            {
+                DataSet dsData = mfReadFile(strFilePath, 2);
+                if (dsData != null && dsData.Tables.Count > 0)
                 {
                     ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
                 }
@@ -275,7 +299,6 @@ namespace QRPDaemon
                     using (var reader = ExcelReaderFactory.CreateReader(stream))
                     {
                         string strSampleID;
-                        string strSampleDate;
                         DateTime dateSampleDate;
                         bool bolBreak = false;
                         do
@@ -322,6 +345,27 @@ namespace QRPDaemon
 
                         ultraGrid1.SetDataBinding(result, string.Empty);
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                //this.mfAddGridMessage(ex.ToString());
+                ultraTextEditor1.Text = ex.ToString();
+            }
+        }
+
+        /// <summary>
+        /// 울산 TOC
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        private void mfParsing_TOC_05(string strFilePath)
+        {
+            try
+            {
+                DataSet dsData = mfReadFile(strFilePath, 10);
+                if (dsData != null && dsData.Tables.Count > 0)
+                {
+                    ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
                 }
             }
             catch (Exception ex)
@@ -380,7 +424,32 @@ namespace QRPDaemon
                     }
                     else if (Path.GetExtension(strFilePath).ToUpper().Equals(".CSV") || Path.GetExtension(strFilePath).ToUpper().Equals(".REP") || Path.GetExtension(strFilePath).ToUpper().Equals(".TXT"))
                     {
-                        using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
+                        using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
+                        {
+                            // Gets or sets the encoding to use when the input XLS lacks a CodePage
+                            // record, or when the input CSV lacks a BOM and does not parse as UTF8. 
+                            // Default: cp1252 (XLS BIFF2-5 and CSV only)
+                            FallbackEncoding = Encoding.GetEncoding(949),
+
+                            //// Gets or sets the password used to open password protected workbooks.
+                            //Password = "password",
+
+                            //// Gets or sets an array of CSV separator candidates. The reader 
+                            //// autodetects which best fits the input data. Default: , ; TAB | # 
+                            //// (CSV only)
+                            AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#', ' ', '"' },
+
+                            //// Gets or sets a value indicating whether to leave the stream open after
+                            //// the IExcelDataReader object is disposed. Default: false
+                            //LeaveOpen = false,
+
+                            //// Gets or sets a value indicating the number of rows to analyze for
+                            //// encoding, separator and field count in a CSV. When set, this option
+                            //// causes the IExcelDataReader.RowCount property to throw an exception.
+                            //// Default: 0 - analyzes the entire file (CSV only, has no effect on other
+                            //// formats)
+                            //AnalyzeInitialCsvRows = 0,
+                        }))
                         {
                             var result = reader.AsDataSet(new ExcelDataSetConfiguration()
                             {

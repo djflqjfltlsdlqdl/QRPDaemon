@@ -35,13 +35,13 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnApply = new System.Windows.Forms.Button();
             this.btnDeleteRow = new System.Windows.Forms.Button();
+            this.btnAddRow = new System.Windows.Forms.Button();
             this.DETAIL = new System.Windows.Forms.TabPage();
             this.tlPanel = new System.Windows.Forms.TableLayoutPanel();
-            this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
-            this.btnAddRow = new System.Windows.Forms.Button();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAllStart = new System.Windows.Forms.Button();
             this.btnAllStop = new System.Windows.Forms.Button();
+            this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.tabMain.SuspendLayout();
             this.ENV.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvENVList)).BeginInit();
@@ -122,6 +122,16 @@
             this.btnDeleteRow.Text = "행삭제";
             this.btnDeleteRow.UseVisualStyleBackColor = true;
             // 
+            // btnAddRow
+            // 
+            this.btnAddRow.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnAddRow.Location = new System.Drawing.Point(123, 3);
+            this.btnAddRow.Name = "btnAddRow";
+            this.btnAddRow.Size = new System.Drawing.Size(114, 24);
+            this.btnAddRow.TabIndex = 2;
+            this.btnAddRow.Text = "행추가";
+            this.btnAddRow.UseVisualStyleBackColor = true;
+            // 
             // DETAIL
             // 
             this.DETAIL.Controls.Add(this.tlPanel);
@@ -137,9 +147,9 @@
             // tlPanel
             // 
             this.tlPanel.ColumnCount = 3;
-            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 28.5702F));
-            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 28.5702F));
-            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 42.85959F));
+            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
             this.tlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tlPanel.Location = new System.Drawing.Point(3, 33);
             this.tlPanel.Name = "tlPanel";
@@ -148,21 +158,6 @@
             this.tlPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tlPanel.Size = new System.Drawing.Size(1170, 699);
             this.tlPanel.TabIndex = 0;
-            // 
-            // trayIcon
-            // 
-            this.trayIcon.Text = "QRPDaemon";
-            this.trayIcon.Visible = true;
-            // 
-            // btnAddRow
-            // 
-            this.btnAddRow.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnAddRow.Location = new System.Drawing.Point(123, 3);
-            this.btnAddRow.Name = "btnAddRow";
-            this.btnAddRow.Size = new System.Drawing.Size(114, 24);
-            this.btnAddRow.TabIndex = 2;
-            this.btnAddRow.Text = "행추가";
-            this.btnAddRow.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel2
             // 
@@ -201,6 +196,11 @@
             this.btnAllStop.TabIndex = 2;
             this.btnAllStop.Text = "전체중지";
             this.btnAllStop.UseVisualStyleBackColor = true;
+            // 
+            // trayIcon
+            // 
+            this.trayIcon.Text = "QRPDaemon";
+            this.trayIcon.Visible = true;
             // 
             // frmMain
             // 

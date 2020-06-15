@@ -31,9 +31,9 @@
             this.tlpTop = new System.Windows.Forms.TableLayoutPanel();
             this.lbInterval = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.txtMeasureName = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.txtOriginFilePath = new System.Windows.Forms.TextBox();
             this.btnStart = new System.Windows.Forms.Button();
             this.btnStop = new System.Windows.Forms.Button();
             this.txtInterval = new System.Windows.Forms.TextBox();
@@ -54,9 +54,9 @@
             this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tlpTop.Controls.Add(this.lbInterval, 0, 0);
             this.tlpTop.Controls.Add(this.label2, 0, 1);
-            this.tlpTop.Controls.Add(this.textBox1, 1, 1);
+            this.tlpTop.Controls.Add(this.txtMeasureName, 1, 1);
             this.tlpTop.Controls.Add(this.label3, 0, 2);
-            this.tlpTop.Controls.Add(this.textBox2, 1, 2);
+            this.tlpTop.Controls.Add(this.txtOriginFilePath, 1, 2);
             this.tlpTop.Controls.Add(this.btnStart, 2, 0);
             this.tlpTop.Controls.Add(this.btnStop, 3, 0);
             this.tlpTop.Controls.Add(this.txtInterval, 1, 0);
@@ -94,16 +94,16 @@
             this.label2.Text = "실험기기";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // textBox1
+            // txtMeasureName
             // 
-            this.tlpTop.SetColumnSpan(this.textBox1, 3);
-            this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBox1.Location = new System.Drawing.Point(63, 29);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.Size = new System.Drawing.Size(234, 20);
-            this.textBox1.TabIndex = 3;
+            this.tlpTop.SetColumnSpan(this.txtMeasureName, 3);
+            this.txtMeasureName.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtMeasureName.Location = new System.Drawing.Point(63, 29);
+            this.txtMeasureName.Multiline = true;
+            this.txtMeasureName.Name = "txtMeasureName";
+            this.txtMeasureName.ReadOnly = true;
+            this.txtMeasureName.Size = new System.Drawing.Size(234, 20);
+            this.txtMeasureName.TabIndex = 3;
             // 
             // label3
             // 
@@ -116,16 +116,16 @@
             this.label3.Text = "파일위치";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
-            // textBox2
+            // txtOriginFilePath
             // 
-            this.tlpTop.SetColumnSpan(this.textBox2, 3);
-            this.textBox2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBox2.Location = new System.Drawing.Point(63, 55);
-            this.textBox2.Multiline = true;
-            this.textBox2.Name = "textBox2";
-            this.textBox2.ReadOnly = true;
-            this.textBox2.Size = new System.Drawing.Size(234, 22);
-            this.textBox2.TabIndex = 5;
+            this.tlpTop.SetColumnSpan(this.txtOriginFilePath, 3);
+            this.txtOriginFilePath.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtOriginFilePath.Location = new System.Drawing.Point(63, 55);
+            this.txtOriginFilePath.Multiline = true;
+            this.txtOriginFilePath.Name = "txtOriginFilePath";
+            this.txtOriginFilePath.ReadOnly = true;
+            this.txtOriginFilePath.Size = new System.Drawing.Size(234, 22);
+            this.txtOriginFilePath.TabIndex = 5;
             // 
             // btnStart
             // 
@@ -207,9 +207,9 @@
         private System.Windows.Forms.DataGridView dgvLogList;
         private System.Windows.Forms.Label lbInterval;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.TextBox txtMeasureName;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textBox2;
+        private System.Windows.Forms.TextBox txtOriginFilePath;
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.TextBox txtInterval;
