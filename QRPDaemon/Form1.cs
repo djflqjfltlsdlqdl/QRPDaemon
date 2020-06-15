@@ -14,6 +14,7 @@ using System.Xml;
 using System.Xml.Linq;
 
 using ExcelDataReader;
+using QRPDaemon.COM;
 
 namespace QRPDaemon
 {
@@ -34,6 +35,8 @@ namespace QRPDaemon
             button4.Click += Button4_Click;
             button5.Click += Button5_Click;
             button6.Click += Button6_Click;
+
+            btnNetwork.Click += BtnNetwork_Click;
         }
 
         private void UltraButton1_Click(object sender, EventArgs e)
@@ -177,6 +180,48 @@ namespace QRPDaemon
         private void Button6_Click(object sender, EventArgs e)
         {
             mfParsing_TOC_05(fn_FileSelect());
+        }
+
+        private void BtnNetwork_Click(object sender, EventArgs e)
+        {
+            StringBuilder sb = new StringBuilder();
+            string strNetworkFullPath = @"\\192.168.16.7\23.H202_Data\1._밀도계";
+            SharedDirectory sd = new SharedDirectory();
+            try
+            {
+                int intErrCode = sd.mfConnectNetworkDrive(strNetworkFullPath, "511208", "511208p");
+                if (intErrCode.Equals(0))
+                {
+                    sb.AppendLine("네트워크 연결 성공!");
+                    System.IO.DirectoryInfo diInfo = new DirectoryInfo(strNetworkFullPath);
+                    if (diInfo.Exists)
+                    {
+                        System.IO.FileInfo[] fiFiles = diInfo.GetFiles();
+                        foreach (System.IO.FileInfo fi in fiFiles)
+                        {
+                            sb.AppendLine(fi.Name);
+                        }
+                    }
+                    else
+                    {
+                        sb.AppendLine("폴더가 존재하지 않습니다!");
+                    }
+                }
+                else
+                {
+                    sb.AppendLine("네트워크 경로 에러!");
+                    sb.AppendLine(string.Format("{0} : {1}", intErrCode, sd.mfGetConnectErrorMessage(intErrCode)));
+                }
+                ultraTextEditor1.Value = sb.ToString();
+            }
+            catch (Exception ex)
+            {
+                ultraTextEditor1.Value = ex.ToString();
+            }
+            finally
+            {
+                sd.mfDisconnectNetworkDrive(strNetworkFullPath);
+            }
         }
 
         private string fn_FileSelect(string strFilter = null)

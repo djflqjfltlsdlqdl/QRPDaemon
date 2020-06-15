@@ -45,14 +45,15 @@
             this.ultraButton2 = new Infragistics.Win.Misc.UltraButton();
             this.ultraButton3 = new Infragistics.Win.Misc.UltraButton();
             this.ultraButton4 = new Infragistics.Win.Misc.UltraButton();
-            this.ultraTextEditor1 = new Infragistics.Win.UltraWinEditors.UltraTextEditor();
-            this.ultraGrid1 = new Infragistics.Win.UltraWinGrid.UltraGrid();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.button6 = new System.Windows.Forms.Button();
+            this.ultraTextEditor1 = new Infragistics.Win.UltraWinEditors.UltraTextEditor();
+            this.ultraGrid1 = new Infragistics.Win.UltraWinGrid.UltraGrid();
+            this.btnNetwork = new System.Windows.Forms.Button();
             this.tlpButton.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ultraTextEditor1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ultraGrid1)).BeginInit();
@@ -78,13 +79,15 @@
             this.tlpButton.Controls.Add(this.button4, 3, 1);
             this.tlpButton.Controls.Add(this.button5, 4, 1);
             this.tlpButton.Controls.Add(this.button6, 5, 1);
+            this.tlpButton.Controls.Add(this.btnNetwork, 0, 2);
             this.tlpButton.Dock = System.Windows.Forms.DockStyle.Top;
             this.tlpButton.Location = new System.Drawing.Point(0, 0);
             this.tlpButton.Name = "tlpButton";
-            this.tlpButton.RowCount = 2;
-            this.tlpButton.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tlpButton.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tlpButton.Size = new System.Drawing.Size(1192, 82);
+            this.tlpButton.RowCount = 3;
+            this.tlpButton.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tlpButton.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tlpButton.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
+            this.tlpButton.Size = new System.Drawing.Size(1192, 100);
             this.tlpButton.TabIndex = 0;
             // 
             // ultraButton1
@@ -92,7 +95,7 @@
             this.ultraButton1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ultraButton1.Location = new System.Drawing.Point(3, 3);
             this.ultraButton1.Name = "ultraButton1";
-            this.ultraButton1.Size = new System.Drawing.Size(94, 35);
+            this.ultraButton1.Size = new System.Drawing.Size(94, 27);
             this.ultraButton1.TabIndex = 0;
             this.ultraButton1.Text = "전주_양이온";
             // 
@@ -101,7 +104,7 @@
             this.ultraButton2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ultraButton2.Location = new System.Drawing.Point(103, 3);
             this.ultraButton2.Name = "ultraButton2";
-            this.ultraButton2.Size = new System.Drawing.Size(94, 35);
+            this.ultraButton2.Size = new System.Drawing.Size(94, 27);
             this.ultraButton2.TabIndex = 1;
             this.ultraButton2.Text = "전주_음이온";
             // 
@@ -110,7 +113,7 @@
             this.ultraButton3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ultraButton3.Location = new System.Drawing.Point(203, 3);
             this.ultraButton3.Name = "ultraButton3";
-            this.ultraButton3.Size = new System.Drawing.Size(94, 35);
+            this.ultraButton3.Size = new System.Drawing.Size(94, 27);
             this.ultraButton3.TabIndex = 2;
             this.ultraButton3.Text = "전주_밀도계";
             // 
@@ -119,18 +122,78 @@
             this.ultraButton4.Dock = System.Windows.Forms.DockStyle.Fill;
             this.ultraButton4.Location = new System.Drawing.Point(303, 3);
             this.ultraButton4.Name = "ultraButton4";
-            this.ultraButton4.Size = new System.Drawing.Size(94, 35);
+            this.ultraButton4.Size = new System.Drawing.Size(94, 27);
             this.ultraButton4.TabIndex = 3;
             this.ultraButton4.Text = "전주_TOC";
+            // 
+            // button1
+            // 
+            this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button1.Location = new System.Drawing.Point(3, 36);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(94, 27);
+            this.button1.TabIndex = 4;
+            this.button1.Text = "울산_밀도계";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            this.button2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button2.Location = new System.Drawing.Point(103, 36);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(94, 27);
+            this.button2.TabIndex = 5;
+            this.button2.Text = "울산_7900";
+            this.button2.UseVisualStyleBackColor = true;
+            // 
+            // button3
+            // 
+            this.button3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button3.Location = new System.Drawing.Point(203, 36);
+            this.button3.Name = "button3";
+            this.button3.Size = new System.Drawing.Size(94, 27);
+            this.button3.TabIndex = 6;
+            this.button3.Text = "울산_M90";
+            this.button3.UseVisualStyleBackColor = true;
+            // 
+            // button4
+            // 
+            this.button4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button4.Location = new System.Drawing.Point(303, 36);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(94, 27);
+            this.button4.TabIndex = 7;
+            this.button4.Text = "울산_ICP-OES";
+            this.button4.UseVisualStyleBackColor = true;
+            // 
+            // button5
+            // 
+            this.button5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button5.Location = new System.Drawing.Point(403, 36);
+            this.button5.Name = "button5";
+            this.button5.Size = new System.Drawing.Size(94, 27);
+            this.button5.TabIndex = 8;
+            this.button5.Text = "울산_음이온";
+            this.button5.UseVisualStyleBackColor = true;
+            // 
+            // button6
+            // 
+            this.button6.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.button6.Location = new System.Drawing.Point(503, 36);
+            this.button6.Name = "button6";
+            this.button6.Size = new System.Drawing.Size(94, 27);
+            this.button6.TabIndex = 9;
+            this.button6.Text = "울산_TOC";
+            this.button6.UseVisualStyleBackColor = true;
             // 
             // ultraTextEditor1
             // 
             this.ultraTextEditor1.Dock = System.Windows.Forms.DockStyle.Left;
-            this.ultraTextEditor1.Location = new System.Drawing.Point(0, 82);
+            this.ultraTextEditor1.Location = new System.Drawing.Point(0, 100);
             this.ultraTextEditor1.Multiline = true;
             this.ultraTextEditor1.Name = "ultraTextEditor1";
             this.ultraTextEditor1.Scrollbars = System.Windows.Forms.ScrollBars.Vertical;
-            this.ultraTextEditor1.Size = new System.Drawing.Size(497, 692);
+            this.ultraTextEditor1.Size = new System.Drawing.Size(497, 674);
             this.ultraTextEditor1.TabIndex = 1;
             // 
             // ultraGrid1
@@ -190,71 +253,21 @@
             this.ultraGrid1.DisplayLayout.ScrollStyle = Infragistics.Win.UltraWinGrid.ScrollStyle.Immediate;
             this.ultraGrid1.DisplayLayout.ViewStyleBand = Infragistics.Win.UltraWinGrid.ViewStyleBand.OutlookGroupBy;
             this.ultraGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ultraGrid1.Location = new System.Drawing.Point(497, 82);
+            this.ultraGrid1.Location = new System.Drawing.Point(497, 100);
             this.ultraGrid1.Name = "ultraGrid1";
-            this.ultraGrid1.Size = new System.Drawing.Size(695, 692);
+            this.ultraGrid1.Size = new System.Drawing.Size(695, 674);
             this.ultraGrid1.TabIndex = 2;
             this.ultraGrid1.Text = "ultraGrid1";
             // 
-            // button1
+            // btnNetwork
             // 
-            this.button1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button1.Location = new System.Drawing.Point(3, 44);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(94, 35);
-            this.button1.TabIndex = 4;
-            this.button1.Text = "울산_밀도계";
-            this.button1.UseVisualStyleBackColor = true;
-            // 
-            // button2
-            // 
-            this.button2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button2.Location = new System.Drawing.Point(103, 44);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(94, 35);
-            this.button2.TabIndex = 5;
-            this.button2.Text = "울산_7900";
-            this.button2.UseVisualStyleBackColor = true;
-            // 
-            // button3
-            // 
-            this.button3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button3.Location = new System.Drawing.Point(203, 44);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(94, 35);
-            this.button3.TabIndex = 6;
-            this.button3.Text = "울산_M90";
-            this.button3.UseVisualStyleBackColor = true;
-            // 
-            // button4
-            // 
-            this.button4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button4.Location = new System.Drawing.Point(303, 44);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(94, 35);
-            this.button4.TabIndex = 7;
-            this.button4.Text = "울산_ICP-OES";
-            this.button4.UseVisualStyleBackColor = true;
-            // 
-            // button5
-            // 
-            this.button5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button5.Location = new System.Drawing.Point(403, 44);
-            this.button5.Name = "button5";
-            this.button5.Size = new System.Drawing.Size(94, 35);
-            this.button5.TabIndex = 8;
-            this.button5.Text = "울산_음이온";
-            this.button5.UseVisualStyleBackColor = true;
-            // 
-            // button6
-            // 
-            this.button6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.button6.Location = new System.Drawing.Point(503, 44);
-            this.button6.Name = "button6";
-            this.button6.Size = new System.Drawing.Size(94, 35);
-            this.button6.TabIndex = 9;
-            this.button6.Text = "울산_TOC";
-            this.button6.UseVisualStyleBackColor = true;
+            this.btnNetwork.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnNetwork.Location = new System.Drawing.Point(3, 69);
+            this.btnNetwork.Name = "btnNetwork";
+            this.btnNetwork.Size = new System.Drawing.Size(94, 28);
+            this.btnNetwork.TabIndex = 10;
+            this.btnNetwork.Text = "연결체크";
+            this.btnNetwork.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -289,6 +302,7 @@
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button button5;
         private System.Windows.Forms.Button button6;
+        private System.Windows.Forms.Button btnNetwork;
     }
 }
 

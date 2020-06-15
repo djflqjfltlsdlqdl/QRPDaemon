@@ -1,3 +1,51 @@
-﻿<?xml version="1.0" encoding="utf-8" ?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <EnvSettings>
+  <EnvSetting>
+    <Apply>True</Apply>
+    <PlantCode>03</PlantCode>
+    <ProcessGroupCode>50</ProcessGroupCode>
+    <InspectTypeCode></InspectTypeCode>
+    <OriginFilePath>\\192.168.16.7\23.H202_Data\1._밀도계</OriginFilePath>
+    <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
+    <Interval>5</Interval>
+    <MeasureName>밀도계</MeasureName>
+    <RowIndex>2</RowIndex>
+    <FileExtension>.xls</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>False</Apply>
+    <PlantCode>03</PlantCode>
+    <ProcessGroupCode>50</ProcessGroupCode>
+    <InspectTypeCode></InspectTypeCode>
+    <OriginFilePath>\\192.168.16.7\23.H202_Data\2_TOC</OriginFilePath>
+    <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
+    <Interval>5</Interval>
+    <MeasureName>TOC</MeasureName>
+    <RowIndex>10</RowIndex>
+    <FileExtension>.txt</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>False</Apply>
+    <PlantCode>03</PlantCode>
+    <ProcessGroupCode>50</ProcessGroupCode>
+    <InspectTypeCode></InspectTypeCode>
+    <OriginFilePath>\\192.168.16.7\23.H202_Data\3_IC</OriginFilePath>
+    <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
+    <Interval>5</Interval>
+    <MeasureName>음이온</MeasureName>
+    <RowIndex>0</RowIndex>
+    <FileExtension>.csv</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>False</Apply>
+    <PlantCode>03</PlantCode>
+    <ProcessGroupCode>50</ProcessGroupCode>
+    <InspectTypeCode></InspectTypeCode>
+    <OriginFilePath>\\192.168.16.7\23.H202_Data\4_ICP-MS</OriginFilePath>
+    <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
+    <Interval>5</Interval>
+    <MeasureName>양이온</MeasureName>
+    <RowIndex>18</RowIndex>
+    <FileExtension>.rep</FileExtension>
+  </EnvSetting>
 </EnvSettings>

@@ -69,10 +69,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BL\clsBL.cs" />
     <Compile Include="BL\clsDB.cs" />
     <Compile Include="COM\clsCommonCode.cs" />
     <Compile Include="COM\clsExtension.cs" />
     <Compile Include="COM\clsLog.cs" />
+    <Compile Include="COM\clsShared.cs" />
     <Compile Include="COM\clsTimer.cs" />
     <Compile Include="Control\ucFile.cs">
       <SubType>UserControl</SubType>

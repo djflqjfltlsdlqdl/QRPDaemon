@@ -23,12 +23,12 @@ namespace QRPDaemon.Control
         private bool m_bolProgFlag = false;
         private string m_strPlantCode = string.Empty;
         private string m_strOriginFilePath = string.Empty;
-        private string m_strTargetFilePath = string.Empty;
+        private string m_strBackupFilePath = string.Empty;
         private int m_intIntervar = 5;
         private string m_strMeasureName = string.Empty;
         private string m_strFileExtension = string.Empty;
         private int m_intRowIndex = 0;
-        private DateTime m_dateLastDate = DateTime.MinValue;
+        private DateTime m_dateLastSampleDate = DateTime.MinValue;
         /// <summary>
         /// 진행상태
         /// </summary>
@@ -56,10 +56,10 @@ namespace QRPDaemon.Control
         /// <summary>
         /// 복사경로
         /// </summary>
-        public string TargetFilePath
+        public string BackupFilePath
         {
-            //get { return m_strTargetFilePath; }
-            set { m_strTargetFilePath = value; }
+            //get { return m_strBackupFilePath; }
+            set { m_strBackupFilePath = value; }
         }
         /// <summary>
         /// 주기
@@ -221,84 +221,95 @@ namespace QRPDaemon.Control
                     if (m_bolProgFlag)
                     {
                         mfSetToolStripStatusLabel("Start...");
-
-                        System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
-                        if (diInfo.Exists)
+                        SharedDirectory sd = new SharedDirectory();
+                        try
                         {
-                            DateTime Now = DateTime.Now;
-                            if (m_strPlantCode.Equals("03"))
-                                Now = Now - Properties.Settings.Default.StartTime_03;
-                            else if (m_strPlantCode.Equals("05"))
-                                Now = Now - Properties.Settings.Default.StartTime_05;
-
-                            string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strTargetFilePath, Now.ToString("yyyy-MM-dd"), m_strMeasureName);
-                            System.IO.DirectoryInfo diTarget = new System.IO.DirectoryInfo(strTargetPath);
-                            if (!diTarget.Exists)
-                                diTarget.Create();
-
-                            System.IO.FileInfo[] getFiles = diInfo.GetFiles();
-                            foreach (System.IO.FileInfo fi in getFiles)
+                            System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
+                            if (diInfo.Exists)
                             {
-                                if (fi.Extension.Equals(m_strFileExtension))
+                                DateTime Now = DateTime.Now;
+                                if (m_strPlantCode.Equals("03"))
+                                    Now = Now - Properties.Settings.Default.StartTime_03;
+                                else if (m_strPlantCode.Equals("05"))
+                                    Now = Now - Properties.Settings.Default.StartTime_05;
+
+                                string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, Now.ToString("yyyy-MM-dd"), m_strMeasureName);
+                                System.IO.DirectoryInfo diTarget = new System.IO.DirectoryInfo(strTargetPath);
+                                if (!diTarget.Exists)
+                                    diTarget.Create();
+
+                                System.IO.FileInfo[] getFiles = diInfo.GetFiles();
+                                foreach (System.IO.FileInfo fi in getFiles)
                                 {
-                                    mfAddGridMessage(string.Format("1.Parsing Start : {0}", fi.FullName));
-                                    if (m_strPlantCode.Equals("03"))
+                                    if (fi.Extension.Equals(m_strFileExtension))
                                     {
-                                        switch (m_strMeasureName)
+                                        mfAddGridMessage(string.Format("1.Parsing Start : {0}", fi.FullName));
+                                        if (m_strPlantCode.Equals("03"))
                                         {
-                                            case "밀도계":
-                                                mfParsing_Density_03(fi.FullName);
-                                                break;
-                                            case "TOC":
-                                                mfParsing_TOC_03(fi.FullName);
-                                                break;
-                                            case "음이온":
-                                                mfParsing_Anion_03(fi.FullName);
-                                                break;
-                                            case "양이온":
-                                                mfParsing_Cation_03(fi.FullName);
-                                                break;
+                                            switch (m_strMeasureName)
+                                            {
+                                                case "밀도계":
+                                                    mfParsing_Density_03(fi.FullName);
+                                                    break;
+                                                case "TOC":
+                                                    mfParsing_TOC_03(fi.FullName);
+                                                    break;
+                                                case "음이온":
+                                                    mfParsing_Anion_03(fi.FullName);
+                                                    break;
+                                                case "양이온":
+                                                    mfParsing_Cation_03(fi.FullName);
+                                                    break;
+                                            }
                                         }
-                                    }
-                                    else if(m_strPlantCode.Equals("05"))
-                                    {
-                                        switch (m_strMeasureName)
+                                        else if (m_strPlantCode.Equals("05"))
                                         {
-                                            case "밀도계":
-                                                mfParsing_Density_05(fi.FullName);
-                                                break;
-                                            case "TOC":
-                                                mfParsing_TOC_05(fi.FullName);
-                                                break;
-                                            case "ICP-MS(7900)":
-                                                mfParsing_Cation_05_7900(fi.FullName);
-                                                break;
-                                            case "ICP-MS(A-M90)":
-                                                mfParsing_Cation_05_M90(fi.FullName);
-                                                break;
-                                            case "ICP-OES":
-                                                mfParsing_Cation_05_M90(fi.FullName);
-                                                break;
-                                            case "ILC":
-                                                mfParsing_Anion_05(fi.FullName);
-                                                break;
+                                            switch (m_strMeasureName)
+                                            {
+                                                case "밀도계":
+                                                    mfParsing_Density_05(fi.FullName);
+                                                    break;
+                                                case "TOC":
+                                                    mfParsing_TOC_05(fi.FullName);
+                                                    break;
+                                                case "ICP-MS(7900)":
+                                                    mfParsing_Cation_05_7900(fi.FullName);
+                                                    break;
+                                                case "ICP-MS(A-M90)":
+                                                    mfParsing_Cation_05_M90(fi.FullName);
+                                                    break;
+                                                case "ICP-OES":
+                                                    mfParsing_Cation_05_M90(fi.FullName);
+                                                    break;
+                                                case "ILC":
+                                                    mfParsing_Anion_05(fi.FullName);
+                                                    break;
+                                            }
                                         }
+                                        mfAddGridMessage(string.Format("2.Parsing End : {0}", fi.FullName));
                                     }
-                                    mfAddGridMessage(string.Format("2.Parsing End : {0}", fi.FullName));
+
+                                    //fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
+                                    //fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
+
+                                    mfAddGridMessage(string.Format("3.File BackUp : {0}", fi.FullName));
                                 }
-
-                                //fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
-                                //fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
-
-                                mfAddGridMessage(string.Format("3.File BackUp : {0}", fi.FullName));
                             }
-                        }
-                        else
-                        {
-                            mfAddGridMessage("파일경로 에러!");
-                        }
+                            else
+                            {
+                                mfAddGridMessage("파일경로 에러!");
+                            }
 
-                        mfSetToolStripStatusLabel("처리 완료..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                            mfSetToolStripStatusLabel("처리 완료..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        }
+                        catch (System.Exception ex)
+                        {
+                        }
+                        finally
+                        {
+                            sd.mfDisconnectNetworkDrive(m_strOriginFilePath);
+                            sd.mfDisconnectNetworkDrive(m_strBackupFilePath);
+                        }
                     }
                 }
                 catch (System.Exception ex)

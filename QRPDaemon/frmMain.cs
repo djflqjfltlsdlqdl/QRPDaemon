@@ -124,10 +124,10 @@ namespace QRPDaemon
                             tlPanel.Controls.Clear();
                             return;
                         }
-                        else if (dgvENVList.Rows[i].Cells["TargetFilePath"].Value.ToString().Equals(string.Empty))
+                        else if (dgvENVList.Rows[i].Cells["BackupFilePath"].Value.ToString().Equals(string.Empty))
                         {
-                            MessageBox.Show((i + 1).ToString() + "번째 행에 파일복사경로를 입력하세요.", "경고창", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            dgvENVList.CurrentCell = this.dgvENVList["TargetFilePath", i];
+                            MessageBox.Show((i + 1).ToString() + "번째 행에 파일백업경로를 입력하세요.", "경고창", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            dgvENVList.CurrentCell = this.dgvENVList["BackupFilePath", i];
                             dgvENVList.BeginEdit(true);
                             tlPanel.Controls.Clear();
                             return;
@@ -147,7 +147,7 @@ namespace QRPDaemon
                         file.PlantCode = dgvENVList.Rows[i].Cells["PlantCode"].Value.ToString();
                         file.MeasureName = dgvENVList.Rows[i].Cells["MeasureName"].Value.ToString();
                         file.OriginFilePath = dgvENVList.Rows[i].Cells["OriginFilePath"].Value.ToString();
-                        file.TargetFilePath = dgvENVList.Rows[i].Cells["TargetFilePath"].Value.ToString();
+                        file.BackupFilePath = dgvENVList.Rows[i].Cells["BackupFilePath"].Value.ToString();
                         file.Intervar = dgvENVList.Rows[i].Cells["Interval"].Value.ToInt();
                         file.RowIndex = dgvENVList.Rows[i].Cells["RowIndex"].Value.ToInt();
                         file.FileExtension = dgvENVList.Rows[i].Cells["FileExtension"].Value.ToString();
@@ -190,7 +190,7 @@ namespace QRPDaemon
                 //        dgvENVList.Rows[i].Cells["PlantCode"].Value = string.Empty;
                 //        dgvENVList.Rows[i].Cells["MeasureName"].Value = string.Empty;
                 //        dgvENVList.Rows[i].Cells["OriginFilePath"].Value = string.Empty;
-                //        dgvENVList.Rows[i].Cells["TargetFilePath"].Value = string.Empty;
+                //        dgvENVList.Rows[i].Cells["BackupFilePath"].Value = string.Empty;
                 //        dgvENVList.Rows[i].Cells["Interval"].Value = 0;
                 //    }
                 //}
@@ -288,7 +288,7 @@ namespace QRPDaemon
             {
                 if (dgvENVList.CurrentCell == null)
                     return;
-                else if (dgvENVList.CurrentCell.OwningColumn.Name.Equals("OriginFilePath") || dgvENVList.CurrentCell.OwningColumn.Name.Equals("TargetFilePath"))
+                else if (dgvENVList.CurrentCell.OwningColumn.Name.Equals("OriginFilePath") || dgvENVList.CurrentCell.OwningColumn.Name.Equals("BackupFilePath"))
                 {
                     using (FolderBrowserDialog file = new FolderBrowserDialog())
                     {
@@ -329,10 +329,12 @@ namespace QRPDaemon
                 DataTable dtEnvList = new DataTable("ENVLIST");
                 dtEnvList.Columns.AddRange(new DataColumn[] {
                     new DataColumn{ ColumnName = "Apply", Caption = "적용", DefaultValue = true, DataType = typeof(bool) }
-                    , new DataColumn{ ColumnName = "PlantCode", Caption = "공장코드", DefaultValue = string.Empty, DataType = typeof(string) }
+                    , new DataColumn{ ColumnName = "PlantCode", Caption = "Site", DefaultValue = string.Empty, DataType = typeof(string) }
+                    , new DataColumn{ ColumnName = "ProcessGroupCode", Caption = "Plant", DefaultValue = string.Empty, DataType = typeof(string) }
+                    , new DataColumn{ ColumnName = "InspectTypeCode", Caption = "검사유형", DefaultValue = string.Empty, DataType = typeof(string) }
                     , new DataColumn{ ColumnName = "MeasureName", Caption = "실험기기", DefaultValue = string.Empty, DataType = typeof(string) }
                     , new DataColumn{ ColumnName = "OriginFilePath", Caption = "원본경로", DefaultValue = string.Empty, DataType = typeof(string) }
-                    , new DataColumn{ ColumnName = "TargetFilePath", Caption = "복사경로", DefaultValue = string.Empty, DataType = typeof(string) }
+                    , new DataColumn{ ColumnName = "BackupFilePath", Caption = "복사경로", DefaultValue = string.Empty, DataType = typeof(string) }
                     , new DataColumn{ ColumnName = "Interval", Caption = "IF주기(분)", DefaultValue = 5, DataType = typeof(Int32) }
                     , new DataColumn{ ColumnName = "RowIndex", Caption = "측정데이터시작행", DefaultValue = 5, DataType = typeof(Int32) }
                     , new DataColumn{ ColumnName = "FileExtension", Caption = "파일확장자", DefaultValue = string.Empty, DataType = typeof(string) }
@@ -342,7 +344,13 @@ namespace QRPDaemon
                 ((DataGridViewCheckBoxColumn)dgvENVList.Columns["Apply"]).HeaderText = "적용";
 
                 ((DataGridViewTextBoxColumn)dgvENVList.Columns["PlantCode"]).MaxInputLength = 10;
-                ((DataGridViewTextBoxColumn)dgvENVList.Columns["PlantCode"]).HeaderText = "공장코드";
+                ((DataGridViewTextBoxColumn)dgvENVList.Columns["PlantCode"]).HeaderText = "Site";
+
+                ((DataGridViewTextBoxColumn)dgvENVList.Columns["ProcessGroupCode"]).MaxInputLength = 10;
+                ((DataGridViewTextBoxColumn)dgvENVList.Columns["ProcessGroupCode"]).HeaderText = "Plant";
+
+                ((DataGridViewTextBoxColumn)dgvENVList.Columns["InspectTypeCode"]).MaxInputLength = 10;
+                ((DataGridViewTextBoxColumn)dgvENVList.Columns["InspectTypeCode"]).HeaderText = "검사유형";
 
                 ((DataGridViewTextBoxColumn)dgvENVList.Columns["MeasureName"]).MaxInputLength = 40;
                 ((DataGridViewTextBoxColumn)dgvENVList.Columns["MeasureName"]).HeaderText = "실험기기";
@@ -351,9 +359,9 @@ namespace QRPDaemon
                 ((DataGridViewTextBoxColumn)dgvENVList.Columns["OriginFilePath"]).HeaderText = "원본경로";
                 //((DataGridViewTextBoxColumn)dgvENVList.Columns["OriginFilePath"]).ReadOnly = true;
 
-                ((DataGridViewTextBoxColumn)dgvENVList.Columns["TargetFilePath"]).MaxInputLength = 500;
-                ((DataGridViewTextBoxColumn)dgvENVList.Columns["TargetFilePath"]).HeaderText = "복사경로";
-                //((DataGridViewTextBoxColumn)dgvENVList.Columns["TargetFilePath"]).ReadOnly = true;
+                ((DataGridViewTextBoxColumn)dgvENVList.Columns["BackupFilePath"]).MaxInputLength = 500;
+                ((DataGridViewTextBoxColumn)dgvENVList.Columns["BackupFilePath"]).HeaderText = "복사경로";
+                //((DataGridViewTextBoxColumn)dgvENVList.Columns["BackupFilePath"]).ReadOnly = true;
 
                 ((DataGridViewTextBoxColumn)dgvENVList.Columns["Interval"]).MaxInputLength = 2;
                 ((DataGridViewTextBoxColumn)dgvENVList.Columns["Interval"]).HeaderText = "IF주기(분)";
@@ -397,9 +405,10 @@ namespace QRPDaemon
                         dr = ((DataTable)dgvENVList.DataSource).NewRow();
                         dr["Apply"] = Convert.ToBoolean(xmlNodeEnvList.ChildNodes[i].SelectSingleNode("Apply").InnerText);
                         dr["PlantCode"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("PlantCode").InnerText;
+                        dr["ProcessGroupCode"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("ProcessGroupCode").InnerText;
                         dr["MeasureName"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("MeasureName").InnerText;
                         dr["OriginFilePath"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("OriginFilePath").InnerText;
-                        dr["TargetFilePath"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("TargetFilePath").InnerText;
+                        dr["BackupFilePath"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("BackupFilePath").InnerText;
                         dr["RowIndex"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("RowIndex").InnerText;
                         dr["Interval"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("Interval").InnerText;
                         dr["FileExtension"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("FileExtension").InnerText;
@@ -481,10 +490,10 @@ namespace QRPDaemon
                     OriginFilePath.InnerText = dgvENVList.Rows[i].Cells["OriginFilePath"].Value.ToString();
                     childNode.AppendChild(OriginFilePath);
 
-                    // Child element: TargetFilePath
-                    System.Xml.XmlElement TargetFilePath = xmlDocument.CreateElement("TargetFilePath");
-                    TargetFilePath.InnerText = dgvENVList.Rows[i].Cells["TargetFilePath"].Value.ToString();
-                    childNode.AppendChild(TargetFilePath);
+                    // Child element: BackupFilePath
+                    System.Xml.XmlElement BackupFilePath = xmlDocument.CreateElement("BackupFilePath");
+                    BackupFilePath.InnerText = dgvENVList.Rows[i].Cells["BackupFilePath"].Value.ToString();
+                    childNode.AppendChild(BackupFilePath);
 
                     // Child element: Interval
                     System.Xml.XmlElement Interval = xmlDocument.CreateElement("Interval");
@@ -496,7 +505,7 @@ namespace QRPDaemon
                     MeasureName.InnerText = dgvENVList.Rows[i].Cells["MeasureName"].Value.ToString();
                     childNode.AppendChild(MeasureName);
 
-                    // Child element: TargetFilePath
+                    // Child element: RowIndex
                     System.Xml.XmlElement RowIndex = xmlDocument.CreateElement("RowIndex");
                     RowIndex.InnerText = dgvENVList.Rows[i].Cells["RowIndex"].Value.ToString();
                     childNode.AppendChild(RowIndex);
