@@ -1,0 +1,23 @@
+﻿<log4net>
+  <appender name="RollingLogFileAppender" type="log4net.Appender.RollingFileAppender">
+	<staticLogFileName value ="false"/>
+	<file value="logs//log_%property{LogName}"/>
+    <immediateFlush>true</immediateFlush>
+    <lockingModel type="log4net.Appender.FileAppender+MinimalLock"/>
+    <appendToFile value="true"/>
+    <datePattern value="-yyyy-MM-dd-HH'.log'" />
+    <rollingStyle value ="Composite" />
+    <filter type="log4net.Filter.LevelRangeFilter">
+      <acceptOnMatch value="true"/>
+      <levelMin value="DEBUG"/>
+      <levelMax value="FATAL"/>
+    </filter>
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="[%-23d] %-5p %c %M: %m %n"/>
+    </layout>
+  </appender>
+
+  <root>
+    <appender-ref ref="RollingLogFileAppender" />
+  </root>
+</log4net>

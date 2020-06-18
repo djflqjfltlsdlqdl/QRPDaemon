@@ -15,6 +15,8 @@ namespace QRPDaemon.BL
         /// CommandTimeOut
         /// </summary>
         private const int m_intCmdTimeOut = 30;
+
+        private const string m_strConnectionstring = "data source={0};user id={1};password={2};Initial Catalog={3};persist security info=true";
         #endregion
 
         #region Function
@@ -26,7 +28,11 @@ namespace QRPDaemon.BL
         {
             try
             {
-                System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection(COMResources.ConnString);
+                System.Data.SqlClient.SqlConnection sqlCon = new System.Data.SqlClient.SqlConnection(string.Format(m_strConnectionstring
+                    , Properties.Settings.Default.DBIP
+                    , Properties.Settings.Default.DBID
+                    , Properties.Settings.Default.DBPW
+                    , Properties.Settings.Default.DBCatalog));
                 sqlCon.Open();
 
                 return sqlCon;
@@ -78,15 +84,15 @@ namespace QRPDaemon.BL
                         m_SqlCmd.ExecuteNonQuery();
 
                         //처리 결과를 구조체 변수에 저장시킴
-                        Result.ErrNum = m_SqlCmd.Parameters["ERRORCODE"].Value.ToInt();
-                        Result.ErrMessage = m_SqlCmd.Parameters["ERRORMESSAGE"].Value.ToString();
+                        Result.ErrNum = m_SqlCmd.Parameters["@Rtn"].Value.ToInt();
+                        Result.ErrMessage = m_SqlCmd.Parameters["@ErrorMessage"].Value.ToString();
 
                         //Output Param이 있는 경우 ArrayList에 저장시킴.
                         Result.mfInitReturnValue();
                         foreach (System.Data.DataRow dr in dtSPParameter.Rows)
                         {
-                            if (!dr["ParamName"].ToString().Equals("ERRORCODE") &&
-                                !dr["ParamName"].ToString().Equals("ERRORMESSAGE") &&
+                            if (!dr["ParamName"].ToString().Equals("@Rtn") &&
+                                !dr["ParamName"].ToString().Equals("@ErrorMessage") &&
                                 (((System.Data.ParameterDirection)dr["ParamDirect"]).Equals(System.Data.ParameterDirection.Output) || ((System.Data.ParameterDirection)dr["ParamDirect"]).Equals(System.Data.ParameterDirection.InputOutput)))
                             {
                                 Result.mfAddReturnValue(m_SqlCmd.Parameters[dr["ParamName"].ToString()].Value.ToString());
@@ -157,13 +163,13 @@ namespace QRPDaemon.BL
                         //처리 결과를 구조체 변수에 저장시킴
                         if (dt.Rows.Count.Equals(0))
                             dt.Rows.Add(dt.NewRow());
-                        dt.Rows[0]["ERRNUM"] = Convert.ToInt32(m_SqlCmd.Parameters["ERRCODE"].Value);
-                        dt.Rows[0]["ERRORMESSAGE"] = m_SqlCmd.Parameters["ERRORMESSAGE"].Value.ToString();
+                        dt.Rows[0]["ERRNUM"] = Convert.ToInt32(m_SqlCmd.Parameters["@Rtn"].Value);
+                        dt.Rows[0]["ERRORMESSAGE"] = m_SqlCmd.Parameters["@ErrorMessage"].Value.ToString();
 
                         foreach (System.Data.DataRow dr in dtSPParameter.Rows)
                         {
-                            if (!dr["ParamName"].ToString().Equals("ERRORCODE") &&
-                                !dr["ParamName"].ToString().Equals("ERRORMESSAGE") &&
+                            if (!dr["ParamName"].ToString().Equals("@Rtn") &&
+                                !dr["ParamName"].ToString().Equals("@ErrorMessage") &&
                                 (((System.Data.ParameterDirection)dr["ParamDirect"]).Equals(System.Data.ParameterDirection.Output) || ((System.Data.ParameterDirection)dr["ParamDirect"]).Equals(System.Data.ParameterDirection.InputOutput)))
                             {
                                 string strName = dr["ParamName"].ToString().Replace("@", string.Empty);

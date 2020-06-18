@@ -1,4 +1,5 @@
-﻿using QRPDaemon.COM;
+﻿using log4net;
+using QRPDaemon.COM;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -13,6 +14,8 @@ namespace QRPDaemon
 {
     public partial class frmMain : Form
     {
+        readonly ILog logger = LogManager.GetLogger(typeof(frmMain));
+
         #region Var
         List<QRPDaemon.Control.ucFile> fSubList;
         #endregion Var
@@ -36,6 +39,17 @@ namespace QRPDaemon
             dgvENVList.KeyPress += DgvENVList_KeyPress;
             dgvENVList.EditingControlShowing += DgvENVList_EditingControlShowing;
             dgvENVList.CellDoubleClick += DgvENVList_CellDoubleClick;
+
+            //System.IO.FileInfo fi = new System.IO.FileInfo(@"XML\\log4net.xml");
+            //log4net.Config.XmlConfigurator.Configure(fi);
+
+            //btnLog.Click += BtnLog_Click;
+            //TextBoxAppender.SetupTextBoxAppend(txtLog, "%date{HH:mm:ss,fff} %-5level %-33logger - %message%newline");
+        }
+
+        private void BtnLog_Click(object sender, EventArgs e)
+        {
+            logger.Info("TEST");
         }
 
         #region Form Events
@@ -43,6 +57,8 @@ namespace QRPDaemon
         {
             InitControl();
             InitConfig();
+
+            //logger.Info("Load Complete");
         }
 
         private void FrmMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -145,6 +161,8 @@ namespace QRPDaemon
 
                         QRPDaemon.Control.ucFile file = new QRPDaemon.Control.ucFile();
                         file.PlantCode = dgvENVList.Rows[i].Cells["PlantCode"].Value.ToString();
+                        file.ProcessGroupCode = dgvENVList.Rows[i].Cells["ProcessGroupCode"].Value.ToString();
+                        file.InspectTypeCode = dgvENVList.Rows[i].Cells["InspectTypeCode"].Value.ToString();
                         file.MeasureName = dgvENVList.Rows[i].Cells["MeasureName"].Value.ToString();
                         file.OriginFilePath = dgvENVList.Rows[i].Cells["OriginFilePath"].Value.ToString();
                         file.BackupFilePath = dgvENVList.Rows[i].Cells["BackupFilePath"].Value.ToString();
@@ -484,6 +502,16 @@ namespace QRPDaemon
                     System.Xml.XmlElement PlantCode = xmlDocument.CreateElement("PlantCode");
                     PlantCode.InnerText = dgvENVList.Rows[i].Cells["PlantCode"].Value.ToString();
                     childNode.AppendChild(PlantCode);
+
+                    // Child element: ProcessGroupCode
+                    System.Xml.XmlElement ProcessGroupCode = xmlDocument.CreateElement("ProcessGroupCode");
+                    ProcessGroupCode.InnerText = dgvENVList.Rows[i].Cells["ProcessGroupCode"].Value.ToString();
+                    childNode.AppendChild(ProcessGroupCode);
+
+                    // Child element: InspectTypeCode
+                    System.Xml.XmlElement InspectTypeCode = xmlDocument.CreateElement("InspectTypeCode");
+                    InspectTypeCode.InnerText = dgvENVList.Rows[i].Cells["InspectTypeCode"].Value.ToString();
+                    childNode.AppendChild(InspectTypeCode);
 
                     // Child element: OriginFilePath
                     System.Xml.XmlElement OriginFilePath = xmlDocument.CreateElement("OriginFilePath");

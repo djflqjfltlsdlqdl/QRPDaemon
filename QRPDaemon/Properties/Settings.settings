@@ -8,5 +8,23 @@
     <Setting Name="StartTime_05" Type="System.TimeSpan" Scope="User">
       <Value Profile="(Default)">07:30:00</Value>
     </Setting>
+    <Setting Name="SharedID" Type="System.String" Scope="User">
+      <Value Profile="(Default)">511208</Value>
+    </Setting>
+    <Setting Name="SharedPW" Type="System.String" Scope="User">
+      <Value Profile="(Default)">511208p</Value>
+    </Setting>
+    <Setting Name="DBIP" Type="System.String" Scope="User">
+      <Value Profile="(Default)">192.168.245.68</Value>
+    </Setting>
+    <Setting Name="DBID" Type="System.String" Scope="User">
+      <Value Profile="(Default)">qrpusr</Value>
+    </Setting>
+    <Setting Name="DBPW" Type="System.String" Scope="User">
+      <Value Profile="(Default)">qrpdev123!</Value>
+    </Setting>
+    <Setting Name="DBCatalog" Type="System.String" Scope="User">
+      <Value Profile="(Default)">QRPDaemon</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

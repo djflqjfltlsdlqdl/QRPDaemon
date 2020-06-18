@@ -39,10 +39,9 @@
             this.txtInterval = new System.Windows.Forms.TextBox();
             this.stStrip = new System.Windows.Forms.StatusStrip();
             this.tsStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
-            this.dgvLogList = new System.Windows.Forms.DataGridView();
+            this.txtLog = new System.Windows.Forms.TextBox();
             this.tlpTop.SuspendLayout();
             this.stStrip.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLogList)).BeginInit();
             this.SuspendLayout();
             // 
             // tlpTop
@@ -171,20 +170,20 @@
             this.tsStatusLabel.Size = new System.Drawing.Size(121, 17);
             this.tsStatusLabel.Text = "toolStripStatusLabel1";
             // 
-            // dgvLogList
+            // txtLog
             // 
-            this.dgvLogList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvLogList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dgvLogList.Location = new System.Drawing.Point(0, 80);
-            this.dgvLogList.Name = "dgvLogList";
-            this.dgvLogList.RowTemplate.Height = 23;
-            this.dgvLogList.Size = new System.Drawing.Size(300, 198);
-            this.dgvLogList.TabIndex = 11;
+            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtLog.Location = new System.Drawing.Point(0, 80);
+            this.txtLog.Multiline = true;
+            this.txtLog.Name = "txtLog";
+            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtLog.Size = new System.Drawing.Size(300, 198);
+            this.txtLog.TabIndex = 11;
             // 
             // ucFile
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
-            this.Controls.Add(this.dgvLogList);
+            this.Controls.Add(this.txtLog);
             this.Controls.Add(this.stStrip);
             this.Controls.Add(this.tlpTop);
             this.Name = "ucFile";
@@ -193,7 +192,6 @@
             this.tlpTop.PerformLayout();
             this.stStrip.ResumeLayout(false);
             this.stStrip.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dgvLogList)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -204,7 +202,6 @@
         private System.Windows.Forms.TableLayoutPanel tlpTop;
         private System.Windows.Forms.StatusStrip stStrip;
         private System.Windows.Forms.ToolStripStatusLabel tsStatusLabel;
-        private System.Windows.Forms.DataGridView dgvLogList;
         private System.Windows.Forms.Label lbInterval;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox txtMeasureName;
@@ -213,5 +210,6 @@
         private System.Windows.Forms.Button btnStart;
         private System.Windows.Forms.Button btnStop;
         private System.Windows.Forms.TextBox txtInterval;
+        private System.Windows.Forms.TextBox txtLog;
     }
 }

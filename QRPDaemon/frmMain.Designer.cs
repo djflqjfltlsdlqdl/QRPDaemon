@@ -42,18 +42,25 @@
             this.btnAllStart = new System.Windows.Forms.Button();
             this.btnAllStop = new System.Windows.Forms.Button();
             this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.TEST = new System.Windows.Forms.TabPage();
+            this.tlpTop = new System.Windows.Forms.TableLayoutPanel();
+            this.btnLog = new System.Windows.Forms.Button();
+            this.txtLog = new System.Windows.Forms.TextBox();
             this.tabMain.SuspendLayout();
             this.ENV.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvENVList)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.DETAIL.SuspendLayout();
             this.tableLayoutPanel2.SuspendLayout();
+            this.TEST.SuspendLayout();
+            this.tlpTop.SuspendLayout();
             this.SuspendLayout();
             // 
             // tabMain
             // 
             this.tabMain.Controls.Add(this.ENV);
             this.tabMain.Controls.Add(this.DETAIL);
+            this.tabMain.Controls.Add(this.TEST);
             this.tabMain.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tabMain.Location = new System.Drawing.Point(0, 0);
             this.tabMain.Name = "tabMain";
@@ -202,6 +209,57 @@
             this.trayIcon.Text = "QRPDaemon";
             this.trayIcon.Visible = true;
             // 
+            // TEST
+            // 
+            this.TEST.Controls.Add(this.txtLog);
+            this.TEST.Controls.Add(this.tlpTop);
+            this.TEST.Location = new System.Drawing.Point(4, 22);
+            this.TEST.Name = "TEST";
+            this.TEST.Size = new System.Drawing.Size(1176, 735);
+            this.TEST.TabIndex = 2;
+            this.TEST.Text = "테스트";
+            this.TEST.UseVisualStyleBackColor = true;
+            // 
+            // tlpTop
+            // 
+            this.tlpTop.ColumnCount = 7;
+            this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tlpTop.Controls.Add(this.btnLog, 0, 0);
+            this.tlpTop.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tlpTop.Location = new System.Drawing.Point(0, 0);
+            this.tlpTop.Name = "tlpTop";
+            this.tlpTop.RowCount = 2;
+            this.tlpTop.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tlpTop.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tlpTop.Size = new System.Drawing.Size(1176, 100);
+            this.tlpTop.TabIndex = 0;
+            // 
+            // btnLog
+            // 
+            this.btnLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnLog.Location = new System.Drawing.Point(3, 3);
+            this.btnLog.Name = "btnLog";
+            this.btnLog.Size = new System.Drawing.Size(94, 44);
+            this.btnLog.TabIndex = 0;
+            this.btnLog.Text = "Log";
+            this.btnLog.UseVisualStyleBackColor = true;
+            // 
+            // txtLog
+            // 
+            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtLog.Location = new System.Drawing.Point(0, 100);
+            this.txtLog.Multiline = true;
+            this.txtLog.Name = "txtLog";
+            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtLog.Size = new System.Drawing.Size(1176, 635);
+            this.txtLog.TabIndex = 1;
+            // 
             // frmMain
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
@@ -210,13 +268,16 @@
             this.Name = "frmMain";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "QRPDaemon";
-            this.WindowState = System.Windows.Forms.FormWindowState.Minimized;
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.tabMain.ResumeLayout(false);
             this.ENV.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dgvENVList)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.DETAIL.ResumeLayout(false);
             this.tableLayoutPanel2.ResumeLayout(false);
+            this.TEST.ResumeLayout(false);
+            this.TEST.PerformLayout();
+            this.tlpTop.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -236,5 +297,9 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
         private System.Windows.Forms.Button btnAllStart;
         private System.Windows.Forms.Button btnAllStop;
+        private System.Windows.Forms.TabPage TEST;
+        private System.Windows.Forms.TableLayoutPanel tlpTop;
+        private System.Windows.Forms.TextBox txtLog;
+        private System.Windows.Forms.Button btnLog;
     }
 }

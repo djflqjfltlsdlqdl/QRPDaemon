@@ -1,27 +1,28 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Drawing;
 using System.Data;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.IO;
-using System.Globalization;
+using log4net;
 using ExcelDataReader;
 using QRPDaemon.COM;
+using log4net.Config;
 
 namespace QRPDaemon.Control
 {
     public partial class ucFile : UserControl
     {
         #region Var
+        readonly ILog logger = LogManager.GetLogger(typeof(ucFile));
+
         private System.Windows.Forms.Timer m_timerMain;
         private System.Windows.Forms.Timer m_timerSub;
 
         private bool m_bolProgFlag = false;
         private string m_strPlantCode = string.Empty;
+        private string m_strProcessGroupCode = string.Empty;
+        private string m_strInspectTypeCode = string.Empty;
         private string m_strOriginFilePath = string.Empty;
         private string m_strBackupFilePath = string.Empty;
         private int m_intIntervar = 5;
@@ -38,12 +39,28 @@ namespace QRPDaemon.Control
             //set { m_bolProgFlag = value; }
         }
         /// <summary>
-        /// 공장코드
+        /// Site
         /// </summary>
         public string PlantCode
         {
             //get { return m_strPlantCode; }
             set { m_strPlantCode = value; }
+        }
+        /// <summary>
+        /// Plant
+        /// </summary>
+        public string ProcessGroupCode
+        {
+            //get { return m_strProcessGroupCode; }
+            set { m_strProcessGroupCode = value; }
+        }
+        /// <summary>
+        /// 유형
+        /// </summary>
+        public string InspectTypeCode
+        {
+            //get { return m_strInspectTypeCode; }
+            set { m_strInspectTypeCode = value; }
         }
         /// <summary>
         /// 원본파일경로
@@ -104,6 +121,11 @@ namespace QRPDaemon.Control
             btnStart.Click += new EventHandler(btnStart_Click);
             btnStop.Click += new EventHandler(btnStop_Click);
             txtInterval.KeyDown += new KeyEventHandler(txtInterval_KeyDown);
+
+            System.IO.FileInfo fi = new System.IO.FileInfo(@"XML\\log4net.xml");
+            log4net.Config.XmlConfigurator.ConfigureAndWatch(fi);
+
+            TextBoxAppender.SetupTextBoxAppend(txtLog, "%date{HH:mm:ss,fff} %-5level %-33logger - %message%newline");
         }
 
         private void UcFile_Load(object sender, EventArgs e)
@@ -113,6 +135,30 @@ namespace QRPDaemon.Control
 
             clsScheduledTimer st = new clsScheduledTimer();
             st.SetTime(new TimeSpan(0, 0, 0), mfDeleteGrid);
+
+            //foreach (var appender in logger.Logger.Repository.GetAppenders())
+            //{
+            //    try
+            //    {
+            //        string file = Path.GetDirectoryName(((log4net.Appender.RollingFileAppender)appender).File);
+            //        string filename = Path.Combine(file, m_strMeasureName);
+
+            //        switch (((log4net.Appender.RollingFileAppender)appender).RollingStyle)
+            //        {
+            //            case log4net.Appender.RollingFileAppender.RollingMode.Date:
+            //                ((log4net.Appender.RollingFileAppender)appender).RollingStyle = log4net.Appender.RollingFileAppender.RollingMode.Once;
+            //                break;
+            //            case log4net.Appender.RollingFileAppender.RollingMode.Composite:
+            //                ((log4net.Appender.RollingFileAppender)appender).RollingStyle = log4net.Appender.RollingFileAppender.RollingMode.Size;
+            //                break;
+            //        }
+            //        ((log4net.Appender.FileAppender)appender).File = filename;
+            //        ((log4net.Appender.FileAppender)appender).ActivateOptions();
+            //    }
+            //    catch (Exception ex) { }
+            //}
+
+            logger.Info("Load Complete!");
         }
 
         #region Initialize
@@ -125,17 +171,7 @@ namespace QRPDaemon.Control
             // 주기
             txtInterval.Text = m_intIntervar.ToString();
 
-            #region DataGridView
-            dgvLogList.ReadOnly = true;
-            dgvLogList.AllowUserToAddRows = false;
-            dgvLogList.AllowUserToDeleteRows = false;
-            dgvLogList.RowHeadersVisible = false;
-
-            dgvLogList.Columns.Add("IFDateTime", "IF일시");
-            dgvLogList.Columns.Add("IFMessage", "IF처리메세지");
-
-            dgvLogList.Columns["IFMessage"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            #endregion
+            //txtLog.ReadOnly = true;
 
             txtMeasureName.Text = m_strMeasureName;
             txtOriginFilePath.Text = m_strOriginFilePath;
@@ -224,97 +260,123 @@ namespace QRPDaemon.Control
                         SharedDirectory sd = new SharedDirectory();
                         try
                         {
-                            System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
-                            if (diInfo.Exists)
+                            int intErrCode = sd.mfConnectNetworkDrive(m_strOriginFilePath, Properties.Settings.Default.SharedID, Properties.Settings.Default.SharedPW);
+                            if (intErrCode.Equals(0))
                             {
-                                DateTime Now = DateTime.Now;
-                                if (m_strPlantCode.Equals("03"))
-                                    Now = Now - Properties.Settings.Default.StartTime_03;
-                                else if (m_strPlantCode.Equals("05"))
-                                    Now = Now - Properties.Settings.Default.StartTime_05;
-
-                                string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, Now.ToString("yyyy-MM-dd"), m_strMeasureName);
-                                System.IO.DirectoryInfo diTarget = new System.IO.DirectoryInfo(strTargetPath);
-                                if (!diTarget.Exists)
-                                    diTarget.Create();
-
-                                System.IO.FileInfo[] getFiles = diInfo.GetFiles();
-                                foreach (System.IO.FileInfo fi in getFiles)
+                                mfAddLogMessage("네트워크 연결 성공!");
+                                System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
+                                if (diInfo.Exists)
                                 {
-                                    if (fi.Extension.Equals(m_strFileExtension))
+                                    DateTime dateSampleDate = DateTime.Now;
+                                    System.IO.FileInfo[] getFiles = diInfo.GetFiles(string.Format("*{0}", m_strFileExtension));
+                                    foreach (System.IO.FileInfo fi in getFiles)
                                     {
-                                        mfAddGridMessage(string.Format("1.Parsing Start : {0}", fi.FullName));
-                                        if (m_strPlantCode.Equals("03"))
+                                        try
                                         {
-                                            switch (m_strMeasureName)
+                                            if (fi.Extension.Equals(m_strFileExtension))
                                             {
-                                                case "밀도계":
-                                                    mfParsing_Density_03(fi.FullName);
-                                                    break;
-                                                case "TOC":
-                                                    mfParsing_TOC_03(fi.FullName);
-                                                    break;
-                                                case "음이온":
-                                                    mfParsing_Anion_03(fi.FullName);
-                                                    break;
-                                                case "양이온":
-                                                    mfParsing_Cation_03(fi.FullName);
-                                                    break;
+                                                mfAddLogMessage(string.Format("1.Parsing Start : {0}", fi.FullName));
+                                                if (m_strPlantCode.Equals("03"))
+                                                {
+                                                    switch (m_strMeasureName)
+                                                    {
+                                                        case "밀도계":
+                                                            dateSampleDate = mfParsing_Density_03(fi.FullName);
+                                                            break;
+                                                        case "TOC":
+                                                            mfParsing_TOC_03(fi.FullName);
+                                                            break;
+                                                        case "음이온":
+                                                            mfParsing_Anion_03(fi.FullName);
+                                                            break;
+                                                        case "양이온":
+                                                            mfParsing_Cation_03(fi.FullName);
+                                                            break;
+                                                    }
+                                                }
+                                                else if (m_strPlantCode.Equals("05"))
+                                                {
+                                                    switch (m_strMeasureName)
+                                                    {
+                                                        case "밀도계":
+                                                            mfParsing_Density_05(fi.FullName);
+                                                            break;
+                                                        case "TOC":
+                                                            mfParsing_TOC_05(fi.FullName);
+                                                            break;
+                                                        case "ICP-MS(7900)":
+                                                            mfParsing_Cation_05_7900(fi.FullName);
+                                                            break;
+                                                        case "ICP-MS(A-M90)":
+                                                            mfParsing_Cation_05_M90(fi.FullName);
+                                                            break;
+                                                        case "ICP-OES":
+                                                            mfParsing_Cation_05_M90(fi.FullName);
+                                                            break;
+                                                        case "ILC":
+                                                            mfParsing_Anion_05(fi.FullName);
+                                                            break;
+                                                    }
+                                                }
+                                                mfAddLogMessage(string.Format("2.Parsing End : {0}", fi.FullName));
+                                            }
+
+                                            if (!dateSampleDate.Equals(DateTime.MaxValue))
+                                            {
+                                                DateTime dateFileDate = dateSampleDate;
+                                                if(m_strPlantCode.Equals("03"))
+                                                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                                                else if(m_strPlantCode.Equals("05"))
+                                                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                                                string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateFileDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+                                                System.IO.DirectoryInfo diTarget = new System.IO.DirectoryInfo(strTargetPath);
+                                                if (!diTarget.Exists)
+                                                    diTarget.Create();
+
+                                                fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
+                                                //fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
+
+                                                mfAddLogMessage(string.Format("3.File BackUp : {0}", fi.FullName));
+
+                                                m_dateLastSampleDate = dateSampleDate;
                                             }
                                         }
-                                        else if (m_strPlantCode.Equals("05"))
+                                        catch(System.Exception ex)
                                         {
-                                            switch (m_strMeasureName)
-                                            {
-                                                case "밀도계":
-                                                    mfParsing_Density_05(fi.FullName);
-                                                    break;
-                                                case "TOC":
-                                                    mfParsing_TOC_05(fi.FullName);
-                                                    break;
-                                                case "ICP-MS(7900)":
-                                                    mfParsing_Cation_05_7900(fi.FullName);
-                                                    break;
-                                                case "ICP-MS(A-M90)":
-                                                    mfParsing_Cation_05_M90(fi.FullName);
-                                                    break;
-                                                case "ICP-OES":
-                                                    mfParsing_Cation_05_M90(fi.FullName);
-                                                    break;
-                                                case "ILC":
-                                                    mfParsing_Anion_05(fi.FullName);
-                                                    break;
-                                            }
+                                            mfAddLogMessage(string.Format("99.Parsing Error In : {0}", fi.FullName));
+                                            MessageBox.Show(ex.ToString());
                                         }
-                                        mfAddGridMessage(string.Format("2.Parsing End : {0}", fi.FullName));
                                     }
-
-                                    //fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
-                                    //fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
-
-                                    mfAddGridMessage(string.Format("3.File BackUp : {0}", fi.FullName));
                                 }
+                                else
+                                {
+                                    mfAddLogMessage("파일경로 에러!");
+                                }
+
+                                mfAddLogMessage("Parsing Complete!");
+                                mfSetToolStripStatusLabel("처리 완료..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                             }
                             else
                             {
-                                mfAddGridMessage("파일경로 에러!");
+                                mfAddLogMessage(string.Format("네트워크 경로 에러 {0} : {1}", intErrCode, sd.mfGetConnectErrorMessage(intErrCode)));
                             }
-
-                            mfSetToolStripStatusLabel("처리 완료..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                         }
                         catch (System.Exception ex)
                         {
+                            mfAddLogMessage(ex.Message);
                         }
                         finally
                         {
                             sd.mfDisconnectNetworkDrive(m_strOriginFilePath);
                             sd.mfDisconnectNetworkDrive(m_strBackupFilePath);
+                            mfAddLogMessage("네트워크 연결 해제!");
                         }
                     }
                 }
                 catch (System.Exception ex)
                 {
-                    mfAddGridMessage(ex.ToString());
+                    mfAddLogMessage(ex.Message);
                 }
                 finally
                 {
@@ -329,23 +391,23 @@ namespace QRPDaemon.Control
         {
             try
             {
-                if (m_timerMain == null)
-                    m_timerMain = new Timer();
-                if (m_timerSub == null)
-                    m_timerSub = new Timer();
+                //if (m_timerMain == null)
+                //    m_timerMain = new Timer();
+                //if (m_timerSub == null)
+                //    m_timerSub = new Timer();
 
-                m_timerMain.Tick += new EventHandler(m_timerMain_Tick);
-                m_timerSub.Tick += new EventHandler(m_timerSub_Tick);
+                //m_timerMain.Tick += new EventHandler(m_timerMain_Tick);
+                //m_timerSub.Tick += new EventHandler(m_timerSub_Tick);
 
-                m_timerSub.Interval = 1000;
+                //m_timerSub.Interval = 1000;
 
-                int intInterval = txtInterval.Text.ToInt();
-                m_timerMain.Interval = intInterval * 1000 * 60;
-
-                tsStatusLabel.Text = "시작...";
+                //int intInterval = txtInterval.Text.ToInt();
+                //m_timerMain.Interval = intInterval * 1000 * 60;
 
                 //m_timerMain.Start();
                 //m_timerSub.Start();
+
+                tsStatusLabel.Text = "시작...";
 
                 if (!m_bolProgFlag)
                 {
@@ -355,8 +417,7 @@ namespace QRPDaemon.Control
             }
             catch (System.Exception ex)
             {
-                MessageBox.Show(ex.ToString());
-                mfAddGridMessage(ex.ToString());
+                mfAddLogMessage(ex.Message);
             }
             finally
             {
@@ -406,19 +467,17 @@ namespace QRPDaemon.Control
         /// Lot리스트 기록메소드
         /// </summary>
         /// <param name="strMessageLine"></param>
-        private void mfAddGridMessage(string strMessage)
+        private void mfAddLogMessage(string strMessage)
         {
             try
             {
-                dgvLogList.mfInvokeIfRequired(() =>
+                txtLog.mfInvokeIfRequired(() =>
                 {
                     string strDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    dgvLogList.Rows.Add(strDateTime, strMessage);
 
-                    // 바인딩후 가장 마지막 행으로 스크롤 이동
-                    dgvLogList.FirstDisplayedScrollingRowIndex = dgvLogList.Rows.Count - 1;
 
-                    new Log().mfWriteLog(CommonCode.CreateLogPathName, m_strMeasureName, strDateTime, strMessage);
+                    //new Log().mfWriteLog(CommonCode.CreateLogPathName, m_strMeasureName, strDateTime, strMessage);
+                    logger.Debug(strMessage);
                 });
             }
             catch (System.Exception ex)
@@ -451,15 +510,15 @@ namespace QRPDaemon.Control
         {
             try
             {
-                string[] strLogMessages = new Log().mfReadRow(CommonCode.CreateLogPathName, m_strMeasureName);
-                int intCnt = strLogMessages.Length;
+                //string[] strLogMessages = new Log().mfReadRow(CommonCode.CreateLogPathName, m_strMeasureName);
+                //int intCnt = strLogMessages.Length;
 
-                char[] strSplit = new char[] { '|' };
-                for (int i = 0; i < intCnt; i++)
-                {
-                    string[] strMessageLine = strLogMessages[i].Split(strSplit);
-                    dgvLogList.Rows.Add(strMessageLine[0], strMessageLine[1]);
-                }
+                //char[] strSplit = new char[] { '|' };
+                //for (int i = 0; i < intCnt; i++)
+                //{
+                //    string[] strMessageLine = strLogMessages[i].Split(strSplit);
+                //    dgvLogList.Rows.Add(strMessageLine[0], strMessageLine[1]);
+                //}
             }
             catch (System.Exception ex)
             {
@@ -471,9 +530,9 @@ namespace QRPDaemon.Control
         /// </summary>
         private void mfDeleteGrid()
         {
-            dgvLogList.mfInvokeIfRequired(() =>
+            txtLog.mfInvokeIfRequired(() =>
             {
-                dgvLogList.Rows.Clear();
+                txtLog.Clear();
             });
         }
 
@@ -543,7 +602,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -560,7 +619,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -568,16 +627,97 @@ namespace QRPDaemon.Control
         /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
-        private void mfParsing_Density_03(string strFilePath)
+        private DateTime mfParsing_Density_03(string strFilePath)
         {
             try
             {
                 // RowIndex : 2
                 DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+
+                DataSet dsFile = GetSaveDefaultDataSet();
+                //var vDataRow = dsData.Tables[0].AsEnumerable().Where(w => !w.Field<string>("Unique Sample Id").Equals(string.Empty) && !w.Field<string>("Sample Name").Equals(string.Empty));
+                DateTime dateSampleDate = DateTime.MaxValue;
+
+                DataRow dr;
+                int intBatchIndex = 0;
+                int intRowCount = dsData.Tables[0].Rows.Count;
+
+                for (int i = 0; i < intRowCount; i++)
+                {
+                    if (!dsData.Tables[0].Rows[i]["Unique Sample Id"].ToString().Equals(string.Empty) && !dsData.Tables[0].Rows[i]["Sample Name"].ToString().Equals(string.Empty))
+                    {
+                        DateTime.TryParse(dsData.Tables[0].Rows[i]["Date"].ToString(), out dateSampleDate);
+                        dr = dsFile.Tables["H"].NewRow();
+                        dr["BatchID"] = 0;
+                        dr["PlantCode"] = m_strPlantCode;
+                        dr["ProcessGroupCode"] = m_strProcessGroupCode;
+                        dr["InspectTypeCode"] = m_strInspectTypeCode;
+                        dr["SampleName"] = dsData.Tables[0].Rows[i]["Sample Name"];
+                        dr["SampleDate"] = dsData.Tables[0].Rows[i]["Date"];
+                        dr["BatchIndex"] = intBatchIndex;
+                        dsFile.Tables["H"].Rows.Add(dr);
+
+                        foreach (DataColumn col in dsData.Tables[0].Columns)
+                        {
+                            dr = dsFile.Tables["D"].NewRow();
+                            dr["ColID"] = col.Ordinal;
+                            dr["RowIndex"] = i;
+                            dr["InspectValue"] = dsData.Tables[0].Rows[i][col.ColumnName];
+                            dr["BatchIndex"] = intBatchIndex;
+                            dsFile.Tables["D"].Rows.Add(dr);
+                    }
+
+                        intBatchIndex++;
+                    }
+                }
+
+                DateTime dateFileDate = dateSampleDate;
+                if (m_strPlantCode.Equals("03"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                else if (m_strPlantCode.Equals("05"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                dr = dsFile.Tables["FI"].NewRow();
+                System.IO.FileInfo fi = new FileInfo(strFilePath);
+                dr["FileID"] = 0;
+                dr["FileName"] = fi.Name;
+                dr["OriginFilePath"] = strFilePath;
+                dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                dsFile.Tables["FI"].Rows.Add(dr);
+
+                foreach (DataColumn col in dsData.Tables[0].Columns)
+                {
+                    dr = dsFile.Tables["FC"].NewRow();
+                    dr["FileID"] = 0;
+                    dr["ColID"] = col.Ordinal;
+                    dr["ColumnName"] = col.ColumnName;
+                    if (intRowCount > 0)
+                        dr["UnitName"] = dsData.Tables[0].Rows[0][col.ColumnName];
+
+                    dsFile.Tables["FC"].Rows.Add(dr);
+                }
+
+                string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                TransErrRtn ErrRtn = new TransErrRtn();
+                ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                if(!ErrRtn.ErrNum.Equals(0))
+                {
+                    mfAddLogMessage("Parsing Data Save Fail!");
+                    mfAddLogMessage(strErrRtn);
+                    dateSampleDate = DateTime.MaxValue;
+                }
+                else
+                {
+                    mfAddLogMessage("Parsing Data Save Success!");
+                }
+
+                return dateSampleDate;
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -594,7 +734,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -611,7 +751,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -628,7 +768,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -645,7 +785,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -662,7 +802,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -726,7 +866,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -747,7 +887,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
         /// <summary>
@@ -881,11 +1021,65 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddGridMessage(ex.ToString());
+                mfAddLogMessage(ex.Message);
                 throw ex;
             }
         }
         #endregion File Parsing
+
+        /// <summary>
+        /// 저장용 기본 Dataset 반환
+        /// </summary>
+        /// <returns></returns>
+        private DataSet GetSaveDefaultDataSet()
+        {
+            DataSet dsData = new DataSet();
+
+            DataTable dtFI = new DataTable("FI");
+            dtFI.Columns.AddRange(new DataColumn[]
+            {
+                new DataColumn("FileID", typeof(Int64))
+                , new DataColumn("FileName", typeof(string))
+                , new DataColumn("OriginFilePath", typeof(string))
+                , new DataColumn("BackupFilePath", typeof(string))
+            });
+
+            DataTable dtFC = new DataTable("FC");
+            dtFC.Columns.AddRange(new DataColumn[]
+            {
+                new DataColumn("FileID", typeof(Int64))
+                , new DataColumn("ColID", typeof(int))
+                , new DataColumn("ColumnName", typeof(string))
+                , new DataColumn("UnitName", typeof(string))
+            });
+
+            DataTable dtHeader = new DataTable("H");
+            dtHeader.Columns.AddRange(new DataColumn[]
+            {
+                new DataColumn("BatchID", typeof(Int64))
+                , new DataColumn("PlantCode", typeof(string))
+                , new DataColumn("ProcessGroupCode", typeof(string))
+                , new DataColumn("InspectTypeCode", typeof(string))
+                , new DataColumn("SampleName", typeof(string))
+                , new DataColumn("SampleDate", typeof(DateTime))
+                , new DataColumn("BatchIndex", typeof(int))
+            });
+
+            DataTable dtData = new DataTable("D");
+            dtData.Columns.AddRange(new DataColumn[]{
+                new DataColumn("ColID", typeof(int))
+                , new DataColumn("RowIndex", typeof(int))
+                , new DataColumn("InspectValue", typeof(string))
+                , new DataColumn("BatchIndex", typeof(int))
+            });
+
+            dsData.Tables.Add(dtFI);
+            dsData.Tables.Add(dtFC);
+            dsData.Tables.Add(dtHeader);
+            dsData.Tables.Add(dtData);
+
+            return dsData;
+        }
         #endregion Method
     }
 }

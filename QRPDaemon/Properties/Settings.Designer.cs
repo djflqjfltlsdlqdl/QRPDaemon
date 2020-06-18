@@ -12,7 +12,7 @@ namespace QRPDaemon.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.3.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.6.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -44,6 +44,78 @@ namespace QRPDaemon.Properties {
             }
             set {
                 this["StartTime_05"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("511208")]
+        public string SharedID {
+            get {
+                return ((string)(this["SharedID"]));
+            }
+            set {
+                this["SharedID"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("511208p")]
+        public string SharedPW {
+            get {
+                return ((string)(this["SharedPW"]));
+            }
+            set {
+                this["SharedPW"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("192.168.245.68")]
+        public string DBIP {
+            get {
+                return ((string)(this["DBIP"]));
+            }
+            set {
+                this["DBIP"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("qrpusr")]
+        public string DBID {
+            get {
+                return ((string)(this["DBID"]));
+            }
+            set {
+                this["DBID"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("qrpdev123!")]
+        public string DBPW {
+            get {
+                return ((string)(this["DBPW"]));
+            }
+            set {
+                this["DBPW"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("QRPDaemon")]
+        public string DBCatalog {
+            get {
+                return ((string)(this["DBCatalog"]));
+            }
+            set {
+                this["DBCatalog"] = value;
             }
         }
     }
