@@ -108,11 +108,8 @@ namespace QRPDaemon
         {
             try
             {
-                DataSet dsData = mfReadFile(fn_FileSelect(), 0);
-                if (dsData != null && dsData.Tables.Count > 0)
-                {
-                    ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
-                }
+                string strFilePath = fn_FileSelect();
+                mfParsing_Anion_03(strFilePath);
             }
             catch (Exception ex)
             {
@@ -124,11 +121,8 @@ namespace QRPDaemon
         {
             try
             {
-                DataSet dsData = mfReadFile(fn_FileSelect(), 2);
-                if (dsData != null && dsData.Tables.Count > 0)
-                {
-                    ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
-                }
+                string strFilePath = fn_FileSelect();
+                mfParsing_Density_03(strFilePath);
             }
             catch (Exception ex)
             {
@@ -246,6 +240,208 @@ namespace QRPDaemon
             {
                 ultraTextEditor1.Value = ex.ToString();
                 return null;
+            }
+        }
+        /// <summary>
+        /// 전주 음이온
+        /// 공통
+        /// </summary>
+        /// <param name="strFilePath">파일경로</param>
+        private DateTime mfParsing_Anion_03(string strFilePath)
+        {
+            try
+            {
+                string m_strPlantCode = "03";
+                string m_strProcessGroupCode = "50";
+                string m_strInspectTypeCode = "";
+                string m_strBackupFilePath = "BackupFilePath";
+                string m_strMeasureName = "음이온";
+                int m_intRowIndex = 0;
+                
+                // RowIndex : 0
+                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+
+                DataSet dsFile = GetSaveDefaultDataSet();
+                DateTime dateSampleDate = DateTime.MaxValue;
+
+                DataRow dr;
+                int intBatchIndex = 1;
+                int intRowCount = dsData.Tables[0].Rows.Count;
+
+                for (int i = 0; i < intRowCount; i++)
+                {
+                    if (!dsData.Tables[0].Rows[i]["Ident"].ToString().Equals(string.Empty))
+                    {
+                        DateTime.TryParse(dsData.Tables[0].Rows[i]["Determination start"].ToString().Substring(0, 19), out dateSampleDate);
+                        
+                        dr = dsFile.Tables["H"].NewRow();
+                        dr["BatchID"] = 0;
+                        dr["PlantCode"] = m_strPlantCode;
+                        dr["ProcessGroupCode"] = m_strProcessGroupCode;
+                        dr["InspectTypeCode"] = m_strInspectTypeCode;
+                        dr["SampleName"] = dsData.Tables[0].Rows[i]["Ident"];
+                        dr["SampleDate"] = dsData.Tables[0].Rows[i]["Determination start"].ToString().Substring(0, 19);
+                        dr["BatchIndex"] = intBatchIndex;
+                        dsFile.Tables["H"].Rows.Add(dr);
+
+                        foreach (DataColumn col in dsData.Tables[0].Columns)
+                        {
+                            dr = dsFile.Tables["D"].NewRow();
+                            dr["ColID"] = col.Ordinal;
+                            dr["RowIndex"] = i;
+                            dr["InspectValue"] = dsData.Tables[0].Rows[i][col.ColumnName];
+                            dr["BatchIndex"] = intBatchIndex;
+                            dsFile.Tables["D"].Rows.Add(dr);
+                        }
+
+                        intBatchIndex++;
+                    }
+                }
+
+                DateTime dateFileDate = dateSampleDate;
+                if (m_strPlantCode.Equals("03"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                else if (m_strPlantCode.Equals("05"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                dr = dsFile.Tables["FI"].NewRow();
+                System.IO.FileInfo fi = new FileInfo(strFilePath);
+                dr["FileID"] = 0;
+                dr["FileName"] = fi.Name;
+                dr["OriginFilePath"] = strFilePath;
+                dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                dsFile.Tables["FI"].Rows.Add(dr);
+
+                foreach (DataColumn col in dsData.Tables[0].Columns)
+                {
+                    dr = dsFile.Tables["FC"].NewRow();
+                    dr["FileID"] = 0;
+                    dr["ColID"] = col.Ordinal;
+                    dr["ColumnName"] = col.ColumnName;
+
+                    dsFile.Tables["FC"].Rows.Add(dr);
+                }
+
+                string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                TransErrRtn ErrRtn = new TransErrRtn();
+                ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                if (!ErrRtn.ErrNum.Equals(0))
+                {
+                    ultraTextEditor1.Text = strErrRtn;
+                    dateSampleDate = DateTime.MaxValue;
+                }
+                else
+                {
+                }
+
+                return dateSampleDate;
+            }
+            catch (Exception ex)
+            {
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
+            }
+        }
+
+        /// <summary>
+        /// 전주 밀도계
+        /// 공통
+        /// </summary>
+        /// <param name="strFilePath">파일경로</param>
+        private DateTime mfParsing_Density_03(string strFilePath)
+        {
+            string m_strPlantCode = "03";
+            string m_strProcessGroupCode = "50";
+            string m_strBackupFilePath = "BackupFilePath";
+            string m_strMeasureName = "밀도계";
+            try
+            {
+                // RowIndex : 2
+                DataSet dsData = mfReadFile(strFilePath, 2);
+
+                DataSet dsFile = GetSaveDefaultDataSet();
+                //var vDataRow = dsData.Tables[0].AsEnumerable().Where(w => !w.Field<string>("Unique Sample Id").Equals(string.Empty) && !w.Field<string>("Sample Name").Equals(string.Empty));
+                DateTime dateSampleDate = DateTime.MaxValue;
+
+                DataRow dr;
+                int intBatchIndex = 1;
+                int intRowCount = dsData.Tables[0].Rows.Count;
+
+                for (int i = 0; i < intRowCount; i++)
+                {
+                    if (!dsData.Tables[0].Rows[i]["Unique Sample Id"].ToString().Equals(string.Empty) && !dsData.Tables[0].Rows[i]["Sample Name"].ToString().Equals(string.Empty))
+                    {
+                        DateTime.TryParse(dsData.Tables[0].Rows[i]["Date"].ToString(), out dateSampleDate);
+                        dr = dsFile.Tables["H"].NewRow();
+                        dr["BatchID"] = 0;
+                        dr["PlantCode"] = "03";
+                        dr["ProcessGroupCode"] = "50";
+                        dr["InspectTypeCode"] = "";
+                        dr["SampleName"] = dsData.Tables[0].Rows[i]["Sample Name"];
+                        dr["SampleDate"] = dsData.Tables[0].Rows[i]["Date"];
+                        dr["BatchIndex"] = intBatchIndex;
+                        dsFile.Tables["H"].Rows.Add(dr);
+
+                        foreach (DataColumn col in dsData.Tables[0].Columns)
+                        {
+                            dr = dsFile.Tables["D"].NewRow();
+                            dr["ColID"] = col.Ordinal;
+                            dr["RowIndex"] = i;
+                            dr["InspectValue"] = dsData.Tables[0].Rows[i][col.ColumnName];
+                            dr["BatchIndex"] = intBatchIndex;
+                            dsFile.Tables["D"].Rows.Add(dr);
+                        }
+
+                        intBatchIndex++;
+                    }
+                }
+
+                DateTime dateFileDate = dateSampleDate;
+                if (m_strPlantCode.Equals("03"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                else if (m_strPlantCode.Equals("05"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                dr = dsFile.Tables["FI"].NewRow();
+                System.IO.FileInfo fi = new FileInfo(strFilePath);
+                dr["FileID"] = 0;
+                dr["FileName"] = fi.Name;
+                dr["OriginFilePath"] = strFilePath;
+                dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                dsFile.Tables["FI"].Rows.Add(dr);
+
+                foreach (DataColumn col in dsData.Tables[0].Columns)
+                {
+                    dr = dsFile.Tables["FC"].NewRow();
+                    dr["FileID"] = 0;
+                    dr["ColID"] = col.Ordinal;
+                    dr["ColumnName"] = col.ColumnName;
+                    if (intRowCount > 0)
+                        dr["UnitName"] = dsData.Tables[0].Rows[0][col.ColumnName];
+
+                    dsFile.Tables["FC"].Rows.Add(dr);
+                }
+
+                string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                TransErrRtn ErrRtn = new TransErrRtn();
+                ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                if (!ErrRtn.ErrNum.Equals(0))
+                {
+                    ultraTextEditor1.Text = strErrRtn;
+                    dateSampleDate = DateTime.MaxValue;
+                }
+                else
+                {
+                }
+
+                return dateSampleDate;
+            }
+            catch (Exception ex)
+            {
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
             }
         }
 
@@ -420,6 +616,12 @@ namespace QRPDaemon
             }
         }
 
+        /// <summary>
+        /// 파일읽기
+        /// </summary>
+        /// <param name="strFilePath"></param>
+        /// <param name="intRowIndex"></param>
+        /// <returns></returns>
         private DataSet mfReadFile(string strFilePath, int intRowIndex = 0)
         {
             try
@@ -463,6 +665,8 @@ namespace QRPDaemon
                                     },
                                 }
                             });
+                            reader.Close();
+                            stream.Close();
 
                             return result;
                         }
@@ -482,7 +686,7 @@ namespace QRPDaemon
                             //// Gets or sets an array of CSV separator candidates. The reader 
                             //// autodetects which best fits the input data. Default: , ; TAB | # 
                             //// (CSV only)
-                            AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#', ' ', '"' },
+                            //AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
 
                             //// Gets or sets a value indicating whether to leave the stream open after
                             //// the IExcelDataReader object is disposed. Default: false
@@ -529,6 +733,9 @@ namespace QRPDaemon
                                     },
                                 }
                             });
+                            reader.Close();
+                            stream.Close();
+
                             return result;
                         }
                     }
@@ -540,10 +747,63 @@ namespace QRPDaemon
             }
             catch (Exception ex)
             {
-                //this.mfAddGridMessage(ex.ToString());
-                ultraTextEditor1.Text = ex.ToString();
-                throw ex;
+                //logger.Error($"Error In mfReadFile : {strFilePath}", ex);
+                throw (ex);
             }
+        }
+
+        /// <summary>
+        /// 저장용 기본 Dataset 반환
+        /// </summary>
+        /// <returns></returns>
+        private DataSet GetSaveDefaultDataSet()
+        {
+            DataSet dsData = new DataSet();
+
+            DataTable dtFI = new DataTable("FI");
+            dtFI.Columns.AddRange(new DataColumn[]
+            {
+                new DataColumn("FileID", typeof(Int64))
+                , new DataColumn("FileName", typeof(string))
+                , new DataColumn("OriginFilePath", typeof(string))
+                , new DataColumn("BackupFilePath", typeof(string))
+            });
+
+            DataTable dtFC = new DataTable("FC");
+            dtFC.Columns.AddRange(new DataColumn[]
+            {
+                new DataColumn("FileID", typeof(Int64))
+                , new DataColumn("ColID", typeof(int))
+                , new DataColumn("ColumnName", typeof(string))
+                , new DataColumn("UnitName", typeof(string))
+            });
+
+            DataTable dtHeader = new DataTable("H");
+            dtHeader.Columns.AddRange(new DataColumn[]
+            {
+                new DataColumn("BatchID", typeof(Int64))
+                , new DataColumn("PlantCode", typeof(string))
+                , new DataColumn("ProcessGroupCode", typeof(string))
+                , new DataColumn("InspectTypeCode", typeof(string))
+                , new DataColumn("SampleName", typeof(string))
+                , new DataColumn("SampleDate", typeof(DateTime))
+                , new DataColumn("BatchIndex", typeof(int))
+            });
+
+            DataTable dtData = new DataTable("D");
+            dtData.Columns.AddRange(new DataColumn[]{
+                new DataColumn("ColID", typeof(int))
+                , new DataColumn("RowIndex", typeof(int))
+                , new DataColumn("InspectValue", typeof(string))
+                , new DataColumn("BatchIndex", typeof(int))
+            });
+
+            dsData.Tables.Add(dtFI);
+            dsData.Tables.Add(dtFC);
+            dsData.Tables.Add(dtHeader);
+            dsData.Tables.Add(dtData);
+
+            return dsData;
         }
     }
 }

@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Linq;
 using log4net;
 using ExcelDataReader;
 using QRPDaemon.COM;
@@ -121,44 +122,32 @@ namespace QRPDaemon.Control
             btnStart.Click += new EventHandler(btnStart_Click);
             btnStop.Click += new EventHandler(btnStop_Click);
             txtInterval.KeyDown += new KeyEventHandler(txtInterval_KeyDown);
-
-            System.IO.FileInfo fi = new System.IO.FileInfo(@"XML\\log4net.xml");
-            log4net.Config.XmlConfigurator.ConfigureAndWatch(fi);
-
-            TextBoxAppender.SetupTextBoxAppend(txtLog, "%date{HH:mm:ss,fff} %-5level %-33logger - %message%newline");
         }
 
         private void UcFile_Load(object sender, EventArgs e)
         {
+            log4net.GlobalContext.Properties["LogName"] = $"{m_strPlantCode}.{m_strMeasureName}";
+            System.IO.FileInfo fi = new System.IO.FileInfo(@"XML\\log4net.xml");
+            log4net.Config.XmlConfigurator.ConfigureAndWatch(fi);
+            TextBoxAppender.SetupTextBoxAppend(txtLog, "[ %date ] [%thread] [ %-5level ] %logger : \"%message\" - %exception%newline");
+
             InitControl();
             mfReadLogData();
 
             clsScheduledTimer st = new clsScheduledTimer();
-            st.SetTime(new TimeSpan(0, 0, 0), mfDeleteGrid);
+            TimeSpan ts = new TimeSpan();
+            switch (m_strPlantCode)
+            {
+                case "03":
+                    ts = Properties.Settings.Default.StartTime_03;
+                    break;
+                case "05":
+                    ts = Properties.Settings.Default.StartTime_05;
+                    break;
+            }
+            st.SetTime(ts, mfDeleteGrid);
 
-            //foreach (var appender in logger.Logger.Repository.GetAppenders())
-            //{
-            //    try
-            //    {
-            //        string file = Path.GetDirectoryName(((log4net.Appender.RollingFileAppender)appender).File);
-            //        string filename = Path.Combine(file, m_strMeasureName);
-
-            //        switch (((log4net.Appender.RollingFileAppender)appender).RollingStyle)
-            //        {
-            //            case log4net.Appender.RollingFileAppender.RollingMode.Date:
-            //                ((log4net.Appender.RollingFileAppender)appender).RollingStyle = log4net.Appender.RollingFileAppender.RollingMode.Once;
-            //                break;
-            //            case log4net.Appender.RollingFileAppender.RollingMode.Composite:
-            //                ((log4net.Appender.RollingFileAppender)appender).RollingStyle = log4net.Appender.RollingFileAppender.RollingMode.Size;
-            //                break;
-            //        }
-            //        ((log4net.Appender.FileAppender)appender).File = filename;
-            //        ((log4net.Appender.FileAppender)appender).ActivateOptions();
-            //    }
-            //    catch (Exception ex) { }
-            //}
-
-            logger.Info("Load Complete!");
+            //logger.Info("Load Complete!");
         }
 
         #region Initialize
@@ -257,25 +246,32 @@ namespace QRPDaemon.Control
                     if (m_bolProgFlag)
                     {
                         mfSetToolStripStatusLabel("Start...");
+                        logger.Info("-- Start -------------------------------------------------------------");
                         SharedDirectory sd = new SharedDirectory();
                         try
                         {
                             int intErrCode = sd.mfConnectNetworkDrive(m_strOriginFilePath, Properties.Settings.Default.SharedID, Properties.Settings.Default.SharedPW);
                             if (intErrCode.Equals(0))
                             {
-                                mfAddLogMessage("네트워크 연결 성공!");
+                                logger.Debug("네트워크 연결 성공!");
                                 System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
                                 if (diInfo.Exists)
                                 {
                                     DateTime dateSampleDate = DateTime.Now;
-                                    System.IO.FileInfo[] getFiles = diInfo.GetFiles(string.Format("*{0}", m_strFileExtension));
+                                    System.IO.FileInfo[] getFiles = diInfo.GetFiles($"*{m_strFileExtension}");
                                     foreach (System.IO.FileInfo fi in getFiles)
                                     {
+                                        if (!m_bolProgFlag)
+                                        {
+                                            logger.Info("작업 중지...");
+                                            break;
+                                        }
                                         try
                                         {
                                             if (fi.Extension.Equals(m_strFileExtension))
                                             {
-                                                mfAddLogMessage(string.Format("1.Parsing Start : {0}", fi.FullName));
+                                                logger.Info($"Parsing Start : {fi.FullName}");
+
                                                 if (m_strPlantCode.Equals("03"))
                                                 {
                                                     switch (m_strMeasureName)
@@ -287,7 +283,7 @@ namespace QRPDaemon.Control
                                                             mfParsing_TOC_03(fi.FullName);
                                                             break;
                                                         case "음이온":
-                                                            mfParsing_Anion_03(fi.FullName);
+                                                            dateSampleDate = mfParsing_Anion_03(fi.FullName);
                                                             break;
                                                         case "양이온":
                                                             mfParsing_Cation_03(fi.FullName);
@@ -318,7 +314,7 @@ namespace QRPDaemon.Control
                                                             break;
                                                     }
                                                 }
-                                                mfAddLogMessage(string.Format("2.Parsing End : {0}", fi.FullName));
+                                                logger.Info($"Parsing End : {fi.FullName}");
                                             }
 
                                             if (!dateSampleDate.Equals(DateTime.MaxValue))
@@ -337,46 +333,46 @@ namespace QRPDaemon.Control
                                                 fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
                                                 //fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
 
-                                                mfAddLogMessage(string.Format("3.File BackUp : {0}", fi.FullName));
-
+                                                logger.Info($"File BackUp : {fi.FullName}");
                                                 m_dateLastSampleDate = dateSampleDate;
                                             }
                                         }
                                         catch(System.Exception ex)
                                         {
-                                            mfAddLogMessage(string.Format("99.Parsing Error In : {0}", fi.FullName));
-                                            MessageBox.Show(ex.ToString());
+                                            logger.Error($"Parsing Error In : {fi.FullName}", ex);
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    mfAddLogMessage("파일경로 에러!");
+                                    logger.Info("파일경로 에러!");
                                 }
 
-                                mfAddLogMessage("Parsing Complete!");
-                                mfSetToolStripStatusLabel("처리 완료..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                                logger.Info("Parsing Complete");
+                                mfSetToolStripStatusLabel("Complete..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                             }
                             else
                             {
-                                mfAddLogMessage(string.Format("네트워크 경로 에러 {0} : {1}", intErrCode, sd.mfGetConnectErrorMessage(intErrCode)));
+                                logger.Info($"Network Path Error {intErrCode} : {sd.mfGetConnectErrorMessage(intErrCode)}");
                             }
                         }
                         catch (System.Exception ex)
                         {
-                            mfAddLogMessage(ex.Message);
+                            logger.Error("try 2", ex);
                         }
                         finally
                         {
                             sd.mfDisconnectNetworkDrive(m_strOriginFilePath);
                             sd.mfDisconnectNetworkDrive(m_strBackupFilePath);
-                            mfAddLogMessage("네트워크 연결 해제!");
+                            logger.Debug("네트워크 연결 해제!");
                         }
                     }
+
+                    logger.Info("-- End -------------------------------------------------------------");
                 }
                 catch (System.Exception ex)
                 {
-                    mfAddLogMessage(ex.Message);
+                    logger.Error("try 1", ex);
                 }
                 finally
                 {
@@ -417,7 +413,7 @@ namespace QRPDaemon.Control
             }
             catch (System.Exception ex)
             {
-                mfAddLogMessage(ex.Message);
+                logger.Error("Error In mfStart", ex);
             }
             finally
             {
@@ -463,28 +459,24 @@ namespace QRPDaemon.Control
                 btnStop.Enabled = false;
             }
         }
-        /// <summary>
-        /// Lot리스트 기록메소드
-        /// </summary>
-        /// <param name="strMessageLine"></param>
-        private void mfAddLogMessage(string strMessage)
-        {
-            try
-            {
-                txtLog.mfInvokeIfRequired(() =>
-                {
-                    string strDateTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-
-                    //new Log().mfWriteLog(CommonCode.CreateLogPathName, m_strMeasureName, strDateTime, strMessage);
-                    logger.Debug(strMessage);
-                });
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-            }
-        }
+        ///// <summary>
+        ///// Lot리스트 기록메소드
+        ///// </summary>
+        ///// <param name="strMessageLine"></param>
+        //private void mfAddLogMessage(string strMessage)
+        //{
+        //    try
+        //    {
+        //        txtLog.mfInvokeIfRequired(() =>
+        //        {
+        //            logger.Debug(strMessage);
+        //        });
+        //    }
+        //    catch (System.Exception ex)
+        //    {
+        //        MessageBox.Show(ex.ToString());
+        //    }
+        //}
         /// <summary>
         /// 상태창 Text 변경 메소드
         /// </summary>
@@ -510,15 +502,13 @@ namespace QRPDaemon.Control
         {
             try
             {
-                //string[] strLogMessages = new Log().mfReadRow(CommonCode.CreateLogPathName, m_strMeasureName);
-                //int intCnt = strLogMessages.Length;
-
-                //char[] strSplit = new char[] { '|' };
-                //for (int i = 0; i < intCnt; i++)
-                //{
-                //    string[] strMessageLine = strLogMessages[i].Split(strSplit);
-                //    dgvLogList.Rows.Add(strMessageLine[0], strMessageLine[1]);
-                //}
+                string strPath = $"{CommonCode.CreateLogPathName}\\{m_strPlantCode}.{m_strMeasureName}\\log.log";
+                System.IO.FileInfo fi = new FileInfo(strPath);
+                if (fi.Exists)
+                {
+                    //string[] strLogMessage = System.IO.File.ReadAllLines(strPath);
+                    txtLog.AppendText(System.IO.File.ReadAllText(strPath));
+                }
             }
             catch (System.Exception ex)
             {
@@ -610,12 +600,90 @@ namespace QRPDaemon.Control
         /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
-        private void mfParsing_Anion_03(string strFilePath)
+        private DateTime mfParsing_Anion_03(string strFilePath)
         {
             try
             {
                 // RowIndex : 0
                 DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+
+                DataSet dsFile = GetSaveDefaultDataSet();
+                DateTime dateSampleDate = DateTime.MaxValue;
+
+                DataRow dr;
+                int intBatchIndex = 1;
+                int intRowCount = dsData.Tables[0].Rows.Count;
+
+                for (int i = 0; i < intRowCount; i++)
+                {
+                    if (!dsData.Tables[0].Rows[i]["Ident"].ToString().Equals(string.Empty))
+                    {
+                        DateTime.TryParse(dsData.Tables[0].Rows[i]["Determination start"].ToString().Substring(0, 19), out dateSampleDate);
+
+                        dr = dsFile.Tables["H"].NewRow();
+                        dr["BatchID"] = 0;
+                        dr["PlantCode"] = m_strPlantCode;
+                        dr["ProcessGroupCode"] = m_strProcessGroupCode;
+                        dr["InspectTypeCode"] = m_strInspectTypeCode;
+                        dr["SampleName"] = dsData.Tables[0].Rows[i]["Ident"];
+                        dr["SampleDate"] = dsData.Tables[0].Rows[i]["Determination start"].ToString().Substring(0, 19);
+                        dr["BatchIndex"] = intBatchIndex;
+                        dsFile.Tables["H"].Rows.Add(dr);
+
+                        foreach (DataColumn col in dsData.Tables[0].Columns)
+                        {
+                            dr = dsFile.Tables["D"].NewRow();
+                            dr["ColID"] = col.Ordinal;
+                            dr["RowIndex"] = i;
+                            dr["InspectValue"] = dsData.Tables[0].Rows[i][col.ColumnName];
+                            dr["BatchIndex"] = intBatchIndex;
+                            dsFile.Tables["D"].Rows.Add(dr);
+                        }
+
+                        intBatchIndex++;
+                    }
+                }
+
+                DateTime dateFileDate = dateSampleDate;
+                if (m_strPlantCode.Equals("03"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                else if (m_strPlantCode.Equals("05"))
+                    dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                dr = dsFile.Tables["FI"].NewRow();
+                System.IO.FileInfo fi = new FileInfo(strFilePath);
+                dr["FileID"] = 0;
+                dr["FileName"] = fi.Name;
+                dr["OriginFilePath"] = strFilePath;
+                dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                dsFile.Tables["FI"].Rows.Add(dr);
+
+                foreach (DataColumn col in dsData.Tables[0].Columns)
+                {
+                    dr = dsFile.Tables["FC"].NewRow();
+                    dr["FileID"] = 0;
+                    dr["ColID"] = col.Ordinal;
+                    dr["ColumnName"] = col.ColumnName;
+
+                    dsFile.Tables["FC"].Rows.Add(dr);
+                }
+
+                string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                TransErrRtn ErrRtn = new TransErrRtn();
+                ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                if (!ErrRtn.ErrNum.Equals(0))
+                {
+                    logger.Error($"Save Error : {strErrRtn}");
+                    dateSampleDate = DateTime.MaxValue;
+                }
+                else
+                {
+                    logger.Info($"Save Success! : {strFilePath}");
+                }
+
+                return dateSampleDate;
             }
             catch (Exception ex)
             {
@@ -639,7 +707,7 @@ namespace QRPDaemon.Control
                 DateTime dateSampleDate = DateTime.MaxValue;
 
                 DataRow dr;
-                int intBatchIndex = 0;
+                int intBatchIndex = 1;
                 int intRowCount = dsData.Tables[0].Rows.Count;
 
                 for (int i = 0; i < intRowCount; i++)
@@ -704,13 +772,12 @@ namespace QRPDaemon.Control
                 ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
                 if(!ErrRtn.ErrNum.Equals(0))
                 {
-                    mfAddLogMessage("Parsing Data Save Fail!");
-                    mfAddLogMessage(strErrRtn);
+                    logger.Error($"Save Error : {strErrRtn}");
                     dateSampleDate = DateTime.MaxValue;
                 }
                 else
                 {
-                    mfAddLogMessage("Parsing Data Save Success!");
+                    logger.Info($"Save Success! : {strFilePath}");
                 }
 
                 return dateSampleDate;
@@ -1021,8 +1088,8 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                mfAddLogMessage(ex.Message);
-                throw ex;
+                //logger.Error($"Error In mfReadFile : {strFilePath}", ex);
+                throw (ex);
             }
         }
         #endregion File Parsing

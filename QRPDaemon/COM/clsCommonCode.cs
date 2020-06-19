@@ -70,7 +70,7 @@ namespace QRPDaemon.COM
         {
             System.IO.FileInfo exeFileInfo = new System.IO.FileInfo(System.Windows.Forms.Application.ExecutablePath);
             CommonCode.m_strEnvXMLFileName = @"XML\FileSetting.xml";
-            CommonCode.m_strCreateLogPathName = exeFileInfo.Directory.FullName.ToString() + @"\CreateLog\";
+            CommonCode.m_strCreateLogPathName = exeFileInfo.Directory.FullName.ToString() + @"\Logs\";
             CommonCode.m_strCreateXMLFilePath = exeFileInfo.Directory.FullName.ToString() + @"\RESULT\";
             CommonCode.m_strDefaultXMLPath = @"XML\Default.xml";
             CommonCode.m_strMeasureDataXMLPath = @"XML\MeasureData.xml";

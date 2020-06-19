@@ -2,13 +2,10 @@
 using QRPDaemon.COM;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+
+[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace QRPDaemon
 {
@@ -40,9 +37,9 @@ namespace QRPDaemon
             dgvENVList.EditingControlShowing += DgvENVList_EditingControlShowing;
             dgvENVList.CellDoubleClick += DgvENVList_CellDoubleClick;
 
+            //log4net.GlobalContext.Properties["LogName"] = "TEST";
             //System.IO.FileInfo fi = new System.IO.FileInfo(@"XML\\log4net.xml");
-            //log4net.Config.XmlConfigurator.Configure(fi);
-
+            //log4net.Config.XmlConfigurator.ConfigureAndWatch(fi);
             //btnLog.Click += BtnLog_Click;
             //TextBoxAppender.SetupTextBoxAppend(txtLog, "%date{HH:mm:ss,fff} %-5level %-33logger - %message%newline");
         }

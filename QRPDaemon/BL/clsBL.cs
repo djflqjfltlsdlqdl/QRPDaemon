@@ -84,13 +84,13 @@ namespace QRPDaemon.BL
                                 {
                                     dtParam = QRPDB.mfSetParamDataTable();
                                     QRPDB.mfAddParamDataRow(dtParam, "@Rtn", ParameterDirection.ReturnValue, SqlDbType.VarChar, 100);
-                                    QRPDB.mfAddParamDataRow(dtParam, "@i_intBatchID", ParameterDirection.Input, SqlDbType.BigInt, dsData.Tables["H"].Rows[i]["BatchID"]);
-                                    QRPDB.mfAddParamDataRow(dtParam, "@i_intFileID", ParameterDirection.Input, SqlDbType.BigInt, intFileID);
-                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strPlantCode", ParameterDirection.Input, SqlDbType.Int, row.Field<string>("PlantCode"));
-                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strProcessGroupCode", ParameterDirection.Input, SqlDbType.Int, row.Field<string>("ProcessGroupCode"));
-                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strInspectTypeCode", ParameterDirection.Input, SqlDbType.Int, row.Field<string>("InspectTypeCode"));
-                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strSampleName", ParameterDirection.Input, SqlDbType.Int, row.Field<string>("SampleName"));
-                                    QRPDB.mfAddParamDataRow(dtParam, "@i_dateSampleDate", ParameterDirection.Input, SqlDbType.Int, row.Field<DateTime>("SampleDate"));
+                                    QRPDB.mfAddParamDataRow(dtParam, "@i_intBatchID", ParameterDirection.Input, SqlDbType.BigInt, dsData.Tables["H"].Rows[i]["BatchIndex"]);
+                                    QRPDB.mfAddParamDataRow(dtParam, "@i_intFileID", ParameterDirection.Input, SqlDbType.BigInt, intFileID.ToString());
+                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strPlantCode", ParameterDirection.Input, SqlDbType.VarChar, row.Field<string>("PlantCode"));
+                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strProcessGroupCode", ParameterDirection.Input, SqlDbType.VarChar, row.Field<string>("ProcessGroupCode"));
+                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strInspectTypeCode", ParameterDirection.Input, SqlDbType.VarChar, row.Field<string>("InspectTypeCode"));
+                                    QRPDB.mfAddParamDataRow(dtParam, "@i_strSampleName", ParameterDirection.Input, SqlDbType.NVarChar, row.Field<string>("SampleName"));
+                                    QRPDB.mfAddParamDataRow(dtParam, "@i_dateSampleDate", ParameterDirection.Input, SqlDbType.DateTime, row.Field<DateTime>("SampleDate"));
                                     QRPDB.mfAddParamDataRow(dtParam, "@o_intBatchID", ParameterDirection.Output, SqlDbType.BigInt);
                                     QRPDB.mfAddParamDataRow(dtParam, "@ErrorMessage", ParameterDirection.Output, SqlDbType.VarChar, 8000);
                                     strErrRtn = QRPDB.mfExecTransStoredProc(sqlCon, trans, "up_Update_EXPFileDataH_01", dtParam);
@@ -106,7 +106,7 @@ namespace QRPDaemon.BL
                                         {
                                             dtParam = QRPDB.mfSetParamDataTable();
                                             QRPDB.mfAddParamDataRow(dtParam, "@Rtn", ParameterDirection.ReturnValue, SqlDbType.VarChar, 100);
-                                            QRPDB.mfAddParamDataRow(dtParam, "@i_intBatchID", ParameterDirection.Input, SqlDbType.BigInt, intBatchID);
+                                            QRPDB.mfAddParamDataRow(dtParam, "@i_intBatchID", ParameterDirection.Input, SqlDbType.BigInt, intBatchID.ToString());
                                             QRPDB.mfAddParamDataRow(dtParam, "@i_intColID", ParameterDirection.Input, SqlDbType.Int, data.Field<int>("ColID").ToString());
                                             QRPDB.mfAddParamDataRow(dtParam, "@i_intRowIndex", ParameterDirection.Input, SqlDbType.Int, data.Field<int>("RowIndex").ToString());
                                             QRPDB.mfAddParamDataRow(dtParam, "@i_strInspectValue", ParameterDirection.Input, SqlDbType.VarChar, data.Field<string>("InspectValue"));
