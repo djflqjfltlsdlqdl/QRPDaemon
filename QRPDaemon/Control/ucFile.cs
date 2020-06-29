@@ -507,7 +507,7 @@ namespace QRPDaemon.Control
                 if (fi.Exists)
                 {
                     //string[] strLogMessage = System.IO.File.ReadAllLines(strPath);
-                    txtLog.AppendText(System.IO.File.ReadAllText(strPath));
+                    txtLog.AppendText(System.IO.File.ReadAllText(strPath, Encoding.Default));
                 }
             }
             catch (System.Exception ex)
