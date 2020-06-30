@@ -13,27 +13,27 @@ namespace QRPDaemon.COM
                 SharedAPI cls = new SharedAPI();
                 int intResult = cls.ConnectRemoteServer(strNetworkFullPath, strAccessID, strAccessPW);
 
-                //연결을 끊고 다시 연결한다.
-                if (intResult.Equals(1219))
-                {
-                    // 연결이 끊어질때까지 최대 30회 반복
-                    bool f = true;
-                    int x = 0;
-                    while (f)
-                    {
-                        if (cls.CancelRemoteServer(strNetworkFullPath).Equals(0))
-                        {
-                            f = false;
-                        }
-                        x++;
+                ////연결을 끊고 다시 연결한다.
+                //if (intResult.Equals(1219))
+                //{
+                //    // 연결이 끊어질때까지 최대 30회 반복
+                //    bool f = true;
+                //    int x = 0;
+                //    while (f)
+                //    {
+                //        if (cls.CancelRemoteServer(strNetworkFullPath).Equals(0))
+                //        {
+                //            f = false;
+                //        }
+                //        x++;
 
-                        if (x.Equals(30))
-                        {
-                            f = false;
-                        }
-                    }
-                    intResult = cls.ConnectRemoteServer(strNetworkFullPath, strAccessID, strAccessPW);
-                }
+                //        if (x.Equals(30))
+                //        {
+                //            f = false;
+                //        }
+                //    }
+                //    intResult = cls.ConnectRemoteServer(strNetworkFullPath, strAccessID, strAccessPW);
+                //}
 
                 return intResult;
             }

@@ -251,7 +251,7 @@ namespace QRPDaemon.Control
                         try
                         {
                             int intErrCode = sd.mfConnectNetworkDrive(m_strOriginFilePath, Properties.Settings.Default.SharedID, Properties.Settings.Default.SharedPW);
-                            if (intErrCode.Equals(0))
+                            if (intErrCode.Equals(0) || intErrCode.Equals(1219))
                             {
                                 logger.Debug("네트워크 연결 성공!");
                                 System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
