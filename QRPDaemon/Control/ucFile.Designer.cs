@@ -135,6 +135,7 @@
             this.btnStart.TabIndex = 6;
             this.btnStart.Text = "시작";
             this.btnStart.UseVisualStyleBackColor = true;
+            this.btnStart.Visible = false;
             // 
             // btnStop
             // 
@@ -145,6 +146,7 @@
             this.btnStop.TabIndex = 7;
             this.btnStop.Text = "중지";
             this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Visible = false;
             // 
             // txtInterval
             // 

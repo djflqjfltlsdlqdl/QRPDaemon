@@ -172,7 +172,7 @@ namespace QRPDaemon.COM
             }
         }
     }
-
+    
     public class TextBoxAppender : AppenderSkeleton
     {
         public static void SetupTextBoxAppend(TextBox textbox, string sLayerFormat)
@@ -239,4 +239,5 @@ namespace QRPDaemon.COM
             _textBox.ScrollToCaret();
         }
     }
+    
 }

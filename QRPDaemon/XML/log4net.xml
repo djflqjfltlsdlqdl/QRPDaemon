@@ -23,6 +23,11 @@
       <IgnoresException value="False" />
     </layout>
   </appender>
+  <logger name="log">
+    <level value="All"></level>
+    <appender-ref ref="RollingLogFileAppender" />
+  </logger>
+
   <root>
     <appender-ref ref="RollingLogFileAppender" />
   </root>

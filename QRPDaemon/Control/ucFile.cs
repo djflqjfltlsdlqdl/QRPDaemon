@@ -9,14 +9,19 @@ using log4net;
 using ExcelDataReader;
 using QRPDaemon.COM;
 using log4net.Config;
+using log4net.Repository;
+using log4net.Repository.Hierarchy;
+using log4net.Appender;
+using log4net.Layout;
 
 namespace QRPDaemon.Control
 {
     public partial class ucFile : UserControl
     {
         #region Var
-        readonly ILog logger = LogManager.GetLogger(typeof(ucFile));
-
+        //readonly ILog Logger = LogManager.GetLogger(typeof(ucFile));
+        public log4net.ILog m_logger = null;
+        public ILog Logger { get => m_logger; set => m_logger = value; }
         private System.Windows.Forms.Timer m_timerMain;
         private System.Windows.Forms.Timer m_timerSub;
 
@@ -126,11 +131,6 @@ namespace QRPDaemon.Control
 
         private void UcFile_Load(object sender, EventArgs e)
         {
-            log4net.GlobalContext.Properties["LogName"] = $"{m_strPlantCode}.{m_strMeasureName}";
-            System.IO.FileInfo fi = new System.IO.FileInfo(@"XML\\log4net.xml");
-            log4net.Config.XmlConfigurator.ConfigureAndWatch(fi);
-            TextBoxAppender.SetupTextBoxAppend(txtLog, "[ %date ] [%thread] [ %-5level ] %logger : \"%message\" - %exception%newline");
-
             InitControl();
             mfReadLogData();
 
@@ -146,8 +146,30 @@ namespace QRPDaemon.Control
                     break;
             }
             st.SetTime(ts, mfDeleteGrid);
+            //st.SetTime(new TimeSpan(16, 26, 0), () =>
+            //{
+            //    try
+            //    {
+            //        txtLog.mfInvokeIfRequired(() =>
+            //        {
+            //            txtLog.Clear();
+            //        });
+            //    }
+            //    catch (System.Exception ex)
+            //    {
+            //        MessageBox.Show(ex.ToString());
+            //    }
+            //});
 
-            //logger.Info("Load Complete!");
+            //log4net.GlobalContext.Properties["LogName"] = $"{m_strPlantCode}.{m_strMeasureName}";
+            //System.IO.FileInfo fiLogInfo = new System.IO.FileInfo(@"XML\\log4net.xml");
+            //log4net.Config.XmlConfigurator.ConfigureAndWatch(fiLogInfo);
+            //TextBoxAppender.SetupTextBoxAppend(this.txtLog, "[ %date ] [%thread] [ %-5level ] %Logger : \"%message\" - %exception%newline");
+            
+            m_logger = SetLog();
+            //TextBoxAppender.SetupTextBoxAppend(txtLog, "[ %date ] [%thread] [ %-5level ] %Logger : \"%message\" - %exception%newline");
+
+            //Logger.Info("Load Complete!");
         }
 
         #region Initialize
@@ -160,7 +182,7 @@ namespace QRPDaemon.Control
             // 주기
             txtInterval.Text = m_intIntervar.ToString();
 
-            //txtLog.ReadOnly = true;
+            txtLog.ReadOnly = true;
 
             txtMeasureName.Text = m_strMeasureName;
             txtOriginFilePath.Text = m_strOriginFilePath;
@@ -246,14 +268,14 @@ namespace QRPDaemon.Control
                     if (m_bolProgFlag)
                     {
                         mfSetToolStripStatusLabel("Start...");
-                        logger.Info("-- Start -------------------------------------------------------------");
+                        Logger.Info("-- Start -------------------------------------------------------------");
                         SharedDirectory sd = new SharedDirectory();
                         try
                         {
                             int intErrCode = sd.mfConnectNetworkDrive(m_strOriginFilePath, Properties.Settings.Default.SharedID, Properties.Settings.Default.SharedPW);
                             if (intErrCode.Equals(0) || intErrCode.Equals(1219))
                             {
-                                logger.Debug("네트워크 연결 성공!");
+                                Logger.Debug("네트워크 연결 성공!");
                                 System.IO.DirectoryInfo diInfo = new System.IO.DirectoryInfo(m_strOriginFilePath);
                                 if (diInfo.Exists)
                                 {
@@ -263,14 +285,14 @@ namespace QRPDaemon.Control
                                     {
                                         if (!m_bolProgFlag)
                                         {
-                                            logger.Info("작업 중지...");
+                                            Logger.Info("작업 중지...");
                                             break;
                                         }
                                         try
                                         {
                                             if (fi.Extension.Equals(m_strFileExtension))
                                             {
-                                                logger.Info($"Parsing Start : {fi.FullName}");
+                                                Logger.Info($"Parsing Start : {fi.FullName}");
 
                                                 if (m_strPlantCode.Equals("03"))
                                                 {
@@ -280,7 +302,7 @@ namespace QRPDaemon.Control
                                                             dateSampleDate = mfParsing_Density_03(fi.FullName);
                                                             break;
                                                         case "TOC":
-                                                            mfParsing_TOC_03(fi.FullName);
+                                                            dateSampleDate = mfParsing_TOC_03(fi.FullName);
                                                             break;
                                                         case "음이온":
                                                             dateSampleDate = mfParsing_Anion_03(fi.FullName);
@@ -314,7 +336,7 @@ namespace QRPDaemon.Control
                                                             break;
                                                     }
                                                 }
-                                                logger.Info($"Parsing End : {fi.FullName}");
+                                                Logger.Info($"Parsing End : {fi.FullName}");
                                             }
 
                                             if (!dateSampleDate.Equals(DateTime.MaxValue))
@@ -330,49 +352,65 @@ namespace QRPDaemon.Control
                                                 if (!diTarget.Exists)
                                                     diTarget.Create();
 
-                                                fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
-                                                //fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
+                                                try
+                                                {
+                                                    //fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
+                                                    fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
+                                                    fi.Delete();
+                                                }
+                                                catch
+                                                {
+                                                }
 
-                                                logger.Info($"File BackUp : {fi.FullName}");
+                                                Logger.Info($"File BackUp : {fi.FullName}");
                                                 m_dateLastSampleDate = dateSampleDate;
                                             }
                                         }
                                         catch(System.Exception ex)
                                         {
-                                            logger.Error($"Parsing Error In : {fi.FullName}", ex);
+                                            Logger.Error($"Parsing Error In : {fi.FullName}", ex);
+                                        }
+                                    }
+
+                                    if (m_strPlantCode.Equals("03") && m_strMeasureName.Equals("밀도계"))
+                                    {
+                                        System.IO.FileInfo[] delFiles = diInfo.GetFiles($"*.md5");
+                                        foreach (System.IO.FileInfo fi in delFiles)
+                                        {
+                                            fi.Delete();
                                         }
                                     }
                                 }
                                 else
                                 {
-                                    logger.Info("파일경로 에러!");
+                                    Logger.Info("파일경로 에러!");
                                 }
 
-                                logger.Info("Parsing Complete");
+                                Logger.Info("----Complete----");
                                 mfSetToolStripStatusLabel("Complete..." + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                             }
                             else
                             {
-                                logger.Info($"Network Path Error {intErrCode} : {sd.mfGetConnectErrorMessage(intErrCode)}");
+                                Logger.Info($"Network Path Error {intErrCode} : {sd.mfGetConnectErrorMessage(intErrCode)}");
                             }
                         }
                         catch (System.Exception ex)
                         {
-                            logger.Error("try 2", ex);
+                            Logger.Error("try 2", ex);
                         }
                         finally
                         {
                             sd.mfDisconnectNetworkDrive(m_strOriginFilePath);
                             sd.mfDisconnectNetworkDrive(m_strBackupFilePath);
-                            logger.Debug("네트워크 연결 해제!");
+                            Logger.Debug("네트워크 연결 해제!");
                         }
                     }
 
-                    logger.Info("-- End -------------------------------------------------------------");
+                    Logger.Info("-- End -------------------------------------------------------------");
                 }
                 catch (System.Exception ex)
                 {
-                    logger.Error("try 1", ex);
+                    Logger.Error("try 1", ex);
                 }
                 finally
                 {
@@ -387,21 +425,21 @@ namespace QRPDaemon.Control
         {
             try
             {
-                //if (m_timerMain == null)
-                //    m_timerMain = new Timer();
-                //if (m_timerSub == null)
-                //    m_timerSub = new Timer();
+                if (m_timerMain == null)
+                    m_timerMain = new Timer();
+                if (m_timerSub == null)
+                    m_timerSub = new Timer();
 
-                //m_timerMain.Tick += new EventHandler(m_timerMain_Tick);
-                //m_timerSub.Tick += new EventHandler(m_timerSub_Tick);
+                m_timerMain.Tick += new EventHandler(m_timerMain_Tick);
+                m_timerSub.Tick += new EventHandler(m_timerSub_Tick);
 
-                //m_timerSub.Interval = 1000;
+                m_timerSub.Interval = 1000;
 
-                //int intInterval = txtInterval.Text.ToInt();
-                //m_timerMain.Interval = intInterval * 1000 * 60;
+                int intInterval = txtInterval.Text.ToInt();
+                m_timerMain.Interval = intInterval * 1000 * 60;
 
-                //m_timerMain.Start();
-                //m_timerSub.Start();
+                m_timerMain.Start();
+                m_timerSub.Start();
 
                 tsStatusLabel.Text = "시작...";
 
@@ -413,7 +451,7 @@ namespace QRPDaemon.Control
             }
             catch (System.Exception ex)
             {
-                logger.Error("Error In mfStart", ex);
+                Logger.Error("Error In mfStart", ex);
             }
             finally
             {
@@ -459,24 +497,6 @@ namespace QRPDaemon.Control
                 btnStop.Enabled = false;
             }
         }
-        ///// <summary>
-        ///// Lot리스트 기록메소드
-        ///// </summary>
-        ///// <param name="strMessageLine"></param>
-        //private void mfAddLogMessage(string strMessage)
-        //{
-        //    try
-        //    {
-        //        txtLog.mfInvokeIfRequired(() =>
-        //        {
-        //            logger.Debug(strMessage);
-        //        });
-        //    }
-        //    catch (System.Exception ex)
-        //    {
-        //        MessageBox.Show(ex.ToString());
-        //    }
-        //}
         /// <summary>
         /// 상태창 Text 변경 메소드
         /// </summary>
@@ -643,12 +663,12 @@ namespace QRPDaemon.Control
                         ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
                         if (!ErrRtn.ErrNum.Equals(0))
                         {
-                            logger.Error($"Save Error : {strErrRtn}");
+                            Logger.Error($"Save Error : {strErrRtn}");
                             dateSampleDate = DateTime.MaxValue;
                         }
                         else
                         {
-                            logger.Info($"Save Success! : {strFilePath}");
+                            Logger.Info($"Save Success! : {strFilePath}");
                         }
 
                         reader.Close();
@@ -742,12 +762,12 @@ namespace QRPDaemon.Control
                 ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
                 if (!ErrRtn.ErrNum.Equals(0))
                 {
-                    logger.Error($"Save Error : {strErrRtn}");
+                    Logger.Error($"Save Error : {strErrRtn}");
                     dateSampleDate = DateTime.MaxValue;
                 }
                 else
                 {
-                    logger.Info($"Save Success! : {strFilePath}");
+                    Logger.Info($"Save Success! : {strFilePath}");
                 }
 
                 return dateSampleDate;
@@ -839,12 +859,12 @@ namespace QRPDaemon.Control
                 ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
                 if(!ErrRtn.ErrNum.Equals(0))
                 {
-                    logger.Error($"Save Error : {strErrRtn}");
+                    Logger.Error($"Save Error : {strErrRtn}");
                     dateSampleDate = DateTime.MaxValue;
                 }
                 else
                 {
-                    logger.Info($"Save Success! : {strFilePath}");
+                    Logger.Info($"Save Success! : {strFilePath}");
                 }
 
                 return dateSampleDate;
@@ -856,15 +876,177 @@ namespace QRPDaemon.Control
         }
         /// <summary>
         /// 전주 TOC
-        /// 공통
+        /// 개별
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
-        private void mfParsing_TOC_03(string strFilePath)
+        private DateTime mfParsing_TOC_03(string strFilePath)
         {
             try
             {
-                // RowIndex : 10
-                DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+
+                DateTime dateSampleDate = DateTime.MaxValue;
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
+                    {
+                        // Gets or sets the encoding to use when the input XLS lacks a CodePage
+                        // record, or when the input CSV lacks a BOM and does not parse as UTF8. 
+                        // Default: cp1252 (XLS BIFF2-5 and CSV only)
+                        FallbackEncoding = Encoding.GetEncoding(949),
+                        //FallbackEncoding = Encoding.ASCII,
+
+                        //// Gets or sets the password used to open password protected workbooks.
+                        //Password = "password",
+
+                        //// Gets or sets an array of CSV separator candidates. The reader 
+                        //// autodetects which best fits the input data. Default: , ; TAB | # 
+                        //// (CSV only)
+                        //AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
+
+                        //// Gets or sets a value indicating whether to leave the stream open after
+                        //// the IExcelDataReader object is disposed. Default: false
+                        //LeaveOpen = false,
+
+                        //// Gets or sets a value indicating the number of rows to analyze for
+                        //// encoding, separator and field count in a CSV. When set, this option
+                        //// causes the IExcelDataReader.RowCount property to throw an exception.
+                        //// Default: 0 - analyzes the entire file (CSV only, has no effect on other
+                        //// formats)
+                        //AnalyzeInitialCsvRows = 0,
+                    }))
+                    {
+                        DataSet dsFile = GetSaveDefaultDataSet();
+                        DataRow dr;
+                        string strSampleID = string.Empty;
+                        string strSampleDate;
+                        bool bolBreak = false;
+                        do
+                        {
+                            while (reader.Read())
+                            {
+                                switch (reader.GetString(0) ?? "")
+                                {
+                                    case "Sample Name":
+                                        strSampleID = reader.GetString(1);
+                                        break;
+                                    case "Date/Time":
+                                        strSampleDate = reader.GetString(1);
+                                        DateTime.TryParse(strSampleDate, out dateSampleDate);
+                                        bolBreak = true;
+                                        break;
+                                }
+
+                                if (bolBreak)
+                                {
+                                    break;
+                                }
+                            }
+                        } while (reader.NextResult());
+
+                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        {
+                            ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                            {
+                                EmptyColumnNamePrefix = "Column",
+                                UseHeaderRow = true,
+
+                                ReadHeaderRow = (rowReader) =>
+                                {
+                                    // F.ex skip the first row and use the 2nd row as column headers:
+                                    for (int i = 0; i < m_intRowIndex; i++)
+                                    {
+                                        rowReader.Read();
+                                    }
+                                },
+                                FilterRow = rowReader =>
+                                {
+                                    var hasData = true;
+                                    switch (rowReader.GetString(0))
+                                    {
+                                        case "[Link Files]":
+                                        case "Archived File":
+                                        case "Data Profile":
+                                        case "PDF Report":
+                                        case "ASCII File":
+                                        case "":
+                                            hasData = false;
+                                            break;
+                                    }
+
+                                    return hasData;
+                                },
+                            }
+                        });
+
+                        dr = dsFile.Tables["H"].NewRow();
+                        dr["BatchID"] = 0;
+                        dr["PlantCode"] = m_strPlantCode;
+                        dr["ProcessGroupCode"] = m_strProcessGroupCode;
+                        dr["InspectTypeCode"] = m_strInspectTypeCode;
+                        dr["SampleName"] = strSampleID;
+                        dr["SampleDate"] = dateSampleDate;
+                        dr["BatchIndex"] = 1;
+                        dsFile.Tables["H"].Rows.Add(dr);
+
+                        int intRowCount = result.Tables[0].Rows.Count;
+
+                        for (int i = 0; i < intRowCount; i++)
+                        {
+                            foreach (DataColumn col in result.Tables[0].Columns)
+                            {
+                                dr = dsFile.Tables["D"].NewRow();
+                                dr["ColID"] = col.Ordinal;
+                                dr["RowIndex"] = i;
+                                dr["InspectValue"] = result.Tables[0].Rows[i][col.ColumnName];
+                                dr["BatchIndex"] = 1;
+                                dsFile.Tables["D"].Rows.Add(dr);
+                            }
+                        }
+
+                        DateTime dateFileDate = dateSampleDate;
+                        if (m_strPlantCode.Equals("03"))
+                            dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                        else if (m_strPlantCode.Equals("05"))
+                            dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                        string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                        dr = dsFile.Tables["FI"].NewRow();
+                        System.IO.FileInfo fi = new FileInfo(strFilePath);
+                        dr["FileID"] = 0;
+                        dr["FileName"] = fi.Name;
+                        dr["OriginFilePath"] = strFilePath;
+                        dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                        dsFile.Tables["FI"].Rows.Add(dr);
+
+                        foreach (DataColumn col in result.Tables[0].Columns)
+                        {
+                            dr = dsFile.Tables["FC"].NewRow();
+                            dr["FileID"] = 0;
+                            dr["ColID"] = col.Ordinal;
+                            dr["ColumnName"] = col.ColumnName;
+
+                            dsFile.Tables["FC"].Rows.Add(dr);
+                        }
+
+                        string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                        TransErrRtn ErrRtn = new TransErrRtn();
+                        ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                        if (!ErrRtn.ErrNum.Equals(0))
+                        {
+                            Logger.Error($"Save Error : {strErrRtn}");
+                            dateSampleDate = DateTime.MaxValue;
+                        }
+                        else
+                        {
+                            Logger.Info($"Save Success! : {strFilePath}");
+                        }
+
+                        reader.Close();
+                    }
+                    stream.Close();
+                }
+                return dateSampleDate;
             }
             catch (Exception ex)
             {
@@ -1155,7 +1337,7 @@ namespace QRPDaemon.Control
             }
             catch (Exception ex)
             {
-                //logger.Error($"Error In mfReadFile : {strFilePath}", ex);
+                //Logger.Error($"Error In mfReadFile : {strFilePath}", ex);
                 throw (ex);
             }
         }
@@ -1213,6 +1395,63 @@ namespace QRPDaemon.Control
             dsData.Tables.Add(dtData);
 
             return dsData;
+        }
+
+        private ILog SetLog()
+        {
+            String FilePath;
+            Hierarchy hierarchy = new Hierarchy();
+            RollingFileAppender rollingAppender = new RollingFileAppender();
+            PatternLayout layout = new PatternLayout();
+
+            ILog log;
+
+            string strName = $"{m_strPlantCode}.{m_strMeasureName}";
+
+            FilePath = $"logs\\{strName}\\log.log";
+
+            hierarchy.Configured = true;
+
+            rollingAppender.Name = "CheckFile";
+            rollingAppender.ImmediateFlush = true;
+            rollingAppender.File = FilePath;
+            rollingAppender.Encoding = Encoding.UTF8;
+            rollingAppender.AppendToFile = true;
+
+            //rollingAppender.DatePattern = "yyyyMMdd'.log''";
+            rollingAppender.RollingStyle = RollingFileAppender.RollingMode.Size;
+            rollingAppender.LockingModel = new RollingFileAppender.MinimalLock();
+            rollingAppender.StaticLogFileName = true;
+            rollingAppender.MaxSizeRollBackups = 5;
+            rollingAppender.MaximumFileSize = "500KB";
+
+            layout = new log4net.Layout.PatternLayout("[ %date ] [%thread] [ %-5level ] %logger : \"%message\" - %exception%newline");
+            rollingAppender.Layout = layout;
+            rollingAppender.ActivateOptions();
+
+            TextBoxAppender textBoxAppender = new TextBoxAppender();
+            textBoxAppender.AppenderTextBox = txtLog;
+            textBoxAppender.Threshold = log4net.Core.Level.All;
+            textBoxAppender.Layout = layout;
+            textBoxAppender.Name = string.Format("TextBoxAppender_{0}", txtLog.Name);
+            textBoxAppender.ActivateOptions();
+
+            log4net.Repository.ILoggerRepository repository = null;
+            var vQuery = LogManager.GetAllRepositories().AsEnumerable().Where(w => w.Name.Equals(strName));
+            foreach (var loggerRepository in vQuery)
+            {
+                repository = loggerRepository;
+            }
+
+            if (repository == null)
+            {
+                repository = LogManager.CreateRepository(strName);
+                BasicConfigurator.Configure(repository, rollingAppender, textBoxAppender);
+            }
+
+            log = LogManager.GetLogger(strName, "CheckFileLogger");
+
+            return log;
         }
         #endregion Method
     }

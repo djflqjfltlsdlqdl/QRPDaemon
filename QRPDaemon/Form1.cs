@@ -134,11 +134,8 @@ namespace QRPDaemon
         {
             try
             {
-                DataSet dsData = mfReadFile(fn_FileSelect(), 10);
-                if (dsData != null && dsData.Tables.Count > 0)
-                {
-                    ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
-                }
+                string strFilePath = fn_FileSelect();
+                mfParsing_TOC_03(strFilePath);
             }
             catch (Exception ex)
             {
@@ -437,6 +434,192 @@ namespace QRPDaemon
                 {
                 }
 
+                return dateSampleDate;
+            }
+            catch (Exception ex)
+            {
+                throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
+            }
+        }
+
+        /// <summary>
+        /// 전주 TOC
+        /// 공통
+        /// </summary>
+        /// <param name="strFilePath">파일경로</param>
+        private DateTime mfParsing_TOC_03(string strFilePath)
+        {
+            int m_intRowIndex = 21;
+            string m_strPlantCode = "03";
+            string m_strProcessGroupCode = "50";
+            string m_strInspectTypeCode = "";
+            string m_strBackupFilePath = string.Empty;
+            string m_strMeasureName = string.Empty;
+
+            try
+            {
+
+                DateTime dateSampleDate = DateTime.MaxValue;
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                {
+                    using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
+                    {
+                        // Gets or sets the encoding to use when the input XLS lacks a CodePage
+                        // record, or when the input CSV lacks a BOM and does not parse as UTF8. 
+                        // Default: cp1252 (XLS BIFF2-5 and CSV only)
+                        FallbackEncoding = Encoding.GetEncoding(949),
+                        //FallbackEncoding = Encoding.ASCII,
+
+                        //// Gets or sets the password used to open password protected workbooks.
+                        //Password = "password",
+
+                        //// Gets or sets an array of CSV separator candidates. The reader 
+                        //// autodetects which best fits the input data. Default: , ; TAB | # 
+                        //// (CSV only)
+                        //AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
+
+                        //// Gets or sets a value indicating whether to leave the stream open after
+                        //// the IExcelDataReader object is disposed. Default: false
+                        //LeaveOpen = false,
+
+                        //// Gets or sets a value indicating the number of rows to analyze for
+                        //// encoding, separator and field count in a CSV. When set, this option
+                        //// causes the IExcelDataReader.RowCount property to throw an exception.
+                        //// Default: 0 - analyzes the entire file (CSV only, has no effect on other
+                        //// formats)
+                        //AnalyzeInitialCsvRows = 0,
+                    }))
+                    {
+                        DataSet dsFile = GetSaveDefaultDataSet();
+                        DataRow dr;
+                        string strSampleID = string.Empty;
+                        string strSampleDate;
+                        bool bolBreak = false;
+                        do
+                        {
+                            while (reader.Read())
+                            {
+                                switch (reader.GetString(0) ?? "")
+                                {
+                                    case "Sample Name":
+                                        strSampleID = reader.GetString(1);
+                                        break;
+                                    case "Date/Time":
+                                        strSampleDate = reader.GetString(1);
+                                        DateTime.TryParse(strSampleDate, out dateSampleDate);
+                                        bolBreak = true;
+                                        break;
+                                }
+
+                                if (bolBreak)
+                                {
+                                    break;
+                                }
+                            }
+                        } while (reader.NextResult());
+
+                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        {
+                            ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                            {
+                                EmptyColumnNamePrefix = "Column",
+                                UseHeaderRow = true,
+
+                                ReadHeaderRow = (rowReader) =>
+                                {
+                                    // F.ex skip the first row and use the 2nd row as column headers:
+                                    for (int i = 0; i < m_intRowIndex; i++)
+                                    {
+                                        rowReader.Read();
+                                    }
+                                },
+                                FilterRow = rowReader =>
+                                {
+                                    var hasData = true;
+                                    switch(rowReader.GetString(0))
+                                    {
+                                        case "[Link Files]":
+                                        case "Archived File":
+                                        case "Data Profile":
+                                        case "PDF Report":
+                                        case "ASCII File":
+                                        case "":
+                                            hasData = false;
+                                            break;
+                                    }
+
+                                    return hasData;
+                                },
+                            }
+                        });
+
+                        dr = dsFile.Tables["H"].NewRow();
+                        dr["BatchID"] = 0;
+                        dr["PlantCode"] = m_strPlantCode;
+                        dr["ProcessGroupCode"] = m_strProcessGroupCode;
+                        dr["InspectTypeCode"] = m_strInspectTypeCode;
+                        dr["SampleName"] = strSampleID;
+                        dr["SampleDate"] = dateSampleDate;
+                        dr["BatchIndex"] = 1;
+                        dsFile.Tables["H"].Rows.Add(dr);
+
+                        int intRowCount = result.Tables[0].Rows.Count;
+
+                        for (int i = 0; i < intRowCount; i++)
+                        {
+                            foreach (DataColumn col in result.Tables[0].Columns)
+                            {
+                                dr = dsFile.Tables["D"].NewRow();
+                                dr["ColID"] = col.Ordinal;
+                                dr["RowIndex"] = i;
+                                dr["InspectValue"] = result.Tables[0].Rows[i][col.ColumnName];
+                                dr["BatchIndex"] = 1;
+                                dsFile.Tables["D"].Rows.Add(dr);
+                            }
+                        }
+
+                        DateTime dateFileDate = dateSampleDate;
+                        if (m_strPlantCode.Equals("03"))
+                            dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                        else if (m_strPlantCode.Equals("05"))
+                            dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                        string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                        dr = dsFile.Tables["FI"].NewRow();
+                        System.IO.FileInfo fi = new FileInfo(strFilePath);
+                        dr["FileID"] = 0;
+                        dr["FileName"] = fi.Name;
+                        dr["OriginFilePath"] = strFilePath;
+                        dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                        dsFile.Tables["FI"].Rows.Add(dr);
+
+                        foreach (DataColumn col in result.Tables[0].Columns)
+                        {
+                            dr = dsFile.Tables["FC"].NewRow();
+                            dr["FileID"] = 0;
+                            dr["ColID"] = col.Ordinal;
+                            dr["ColumnName"] = col.ColumnName;
+
+                            dsFile.Tables["FC"].Rows.Add(dr);
+                        }
+
+                        string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                        TransErrRtn ErrRtn = new TransErrRtn();
+                        ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                        if (!ErrRtn.ErrNum.Equals(0))
+                        {
+                            ultraTextEditor1.Text = strErrRtn;
+                            dateSampleDate = DateTime.MaxValue;
+                        }
+                        else
+                        {
+                        }
+
+                        reader.Close();
+                    }
+                    stream.Close();
+                }
                 return dateSampleDate;
             }
             catch (Exception ex)

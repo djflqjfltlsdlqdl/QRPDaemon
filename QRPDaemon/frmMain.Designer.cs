@@ -37,15 +37,15 @@
             this.btnDeleteRow = new System.Windows.Forms.Button();
             this.btnAddRow = new System.Windows.Forms.Button();
             this.DETAIL = new System.Windows.Forms.TabPage();
-            this.tlPanel = new System.Windows.Forms.TableLayoutPanel();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAllStart = new System.Windows.Forms.Button();
             this.btnAllStop = new System.Windows.Forms.Button();
-            this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.TEST = new System.Windows.Forms.TabPage();
+            this.txtLog = new System.Windows.Forms.TextBox();
             this.tlpTop = new System.Windows.Forms.TableLayoutPanel();
             this.btnLog = new System.Windows.Forms.Button();
-            this.txtLog = new System.Windows.Forms.TextBox();
+            this.trayIcon = new System.Windows.Forms.NotifyIcon(this.components);
+            this.btnSchedule = new System.Windows.Forms.Button();
             this.tabMain.SuspendLayout();
             this.ENV.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvENVList)).BeginInit();
@@ -141,7 +141,7 @@
             // 
             // DETAIL
             // 
-            this.DETAIL.Controls.Add(this.tlPanel);
+            this.DETAIL.AutoScroll = true;
             this.DETAIL.Controls.Add(this.tableLayoutPanel2);
             this.DETAIL.Location = new System.Drawing.Point(4, 22);
             this.DETAIL.Name = "DETAIL";
@@ -150,21 +150,6 @@
             this.DETAIL.TabIndex = 1;
             this.DETAIL.Text = "상세내용";
             this.DETAIL.UseVisualStyleBackColor = true;
-            // 
-            // tlPanel
-            // 
-            this.tlPanel.ColumnCount = 3;
-            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tlPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33333F));
-            this.tlPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tlPanel.Location = new System.Drawing.Point(3, 33);
-            this.tlPanel.Name = "tlPanel";
-            this.tlPanel.RowCount = 2;
-            this.tlPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tlPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tlPanel.Size = new System.Drawing.Size(1170, 699);
-            this.tlPanel.TabIndex = 0;
             // 
             // tableLayoutPanel2
             // 
@@ -182,7 +167,7 @@
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel2.Size = new System.Drawing.Size(1170, 30);
-            this.tableLayoutPanel2.TabIndex = 1;
+            this.tableLayoutPanel2.TabIndex = 3;
             // 
             // btnAllStart
             // 
@@ -204,11 +189,6 @@
             this.btnAllStop.Text = "전체중지";
             this.btnAllStop.UseVisualStyleBackColor = true;
             // 
-            // trayIcon
-            // 
-            this.trayIcon.Text = "QRPDaemon";
-            this.trayIcon.Visible = true;
-            // 
             // TEST
             // 
             this.TEST.Controls.Add(this.txtLog);
@@ -220,6 +200,16 @@
             this.TEST.Text = "테스트";
             this.TEST.UseVisualStyleBackColor = true;
             // 
+            // txtLog
+            // 
+            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.txtLog.Location = new System.Drawing.Point(0, 100);
+            this.txtLog.Multiline = true;
+            this.txtLog.Name = "txtLog";
+            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtLog.Size = new System.Drawing.Size(1176, 635);
+            this.txtLog.TabIndex = 1;
+            // 
             // tlpTop
             // 
             this.tlpTop.ColumnCount = 7;
@@ -230,6 +220,7 @@
             this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tlpTop.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tlpTop.Controls.Add(this.btnSchedule, 0, 1);
             this.tlpTop.Controls.Add(this.btnLog, 0, 0);
             this.tlpTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.tlpTop.Location = new System.Drawing.Point(0, 0);
@@ -250,15 +241,20 @@
             this.btnLog.Text = "Log";
             this.btnLog.UseVisualStyleBackColor = true;
             // 
-            // txtLog
+            // trayIcon
             // 
-            this.txtLog.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.txtLog.Location = new System.Drawing.Point(0, 100);
-            this.txtLog.Multiline = true;
-            this.txtLog.Name = "txtLog";
-            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLog.Size = new System.Drawing.Size(1176, 635);
-            this.txtLog.TabIndex = 1;
+            this.trayIcon.Text = "QRPDaemon";
+            this.trayIcon.Visible = true;
+            // 
+            // btnSchedule
+            // 
+            this.btnSchedule.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnSchedule.Location = new System.Drawing.Point(3, 53);
+            this.btnSchedule.Name = "btnSchedule";
+            this.btnSchedule.Size = new System.Drawing.Size(94, 44);
+            this.btnSchedule.TabIndex = 1;
+            this.btnSchedule.Text = "스케쥴";
+            this.btnSchedule.UseVisualStyleBackColor = true;
             // 
             // frmMain
             // 
@@ -291,15 +287,15 @@
         private System.Windows.Forms.Button btnApply;
         private System.Windows.Forms.Button btnDeleteRow;
         private System.Windows.Forms.TabPage DETAIL;
-        private System.Windows.Forms.TableLayoutPanel tlPanel;
         private System.Windows.Forms.NotifyIcon trayIcon;
         private System.Windows.Forms.Button btnAddRow;
-        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
-        private System.Windows.Forms.Button btnAllStart;
-        private System.Windows.Forms.Button btnAllStop;
         private System.Windows.Forms.TabPage TEST;
         private System.Windows.Forms.TableLayoutPanel tlpTop;
         private System.Windows.Forms.TextBox txtLog;
         private System.Windows.Forms.Button btnLog;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+        private System.Windows.Forms.Button btnAllStart;
+        private System.Windows.Forms.Button btnAllStop;
+        private System.Windows.Forms.Button btnSchedule;
     }
 }

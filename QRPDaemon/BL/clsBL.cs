@@ -12,7 +12,7 @@ namespace QRPDaemon.BL
     /// <summary>
     /// BL 클래스
     /// </summary>
-    public static class clsBL
+    public class clsBL
     {
         /// <summary>
         /// 파일데이터 저장

@@ -3,15 +3,14 @@ using QRPDaemon.COM;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Windows.Forms;
-
-[assembly: log4net.Config.XmlConfigurator(Watch = true)]
 
 namespace QRPDaemon
 {
     public partial class frmMain : Form
     {
-        readonly ILog logger = LogManager.GetLogger(typeof(frmMain));
+        //readonly ILog logger = LogManager.GetLogger(typeof(frmMain));
 
         #region Var
         List<QRPDaemon.Control.ucFile> fSubList;
@@ -42,12 +41,26 @@ namespace QRPDaemon
             //log4net.Config.XmlConfigurator.ConfigureAndWatch(fi);
             //btnLog.Click += BtnLog_Click;
             //TextBoxAppender.SetupTextBoxAppend(txtLog, "%date{HH:mm:ss,fff} %-5level %-33logger - %message%newline");
+
+            //btnSchedule.Click += BtnSchedule_Click;
         }
 
-        private void BtnLog_Click(object sender, EventArgs e)
-        {
-            logger.Info("TEST");
-        }
+        #region Test
+        //private void BtnLog_Click(object sender, EventArgs e)
+        //{
+        //    logger.Info("TEST");
+        //}
+
+        //private void BtnSchedule_Click(object sender, EventArgs e)
+        //{
+        //    clsScheduledTimer st = new clsScheduledTimer();
+        //    TimeSpan ts = new TimeSpan(15, 53, 30);
+        //    st.SetTime(ts, () =>
+        //    {
+        //        MessageBox.Show(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+        //    });
+        //}
+        #endregion Test
 
         #region Form Events
         private void FrmMain_Load(object sender, EventArgs e)
@@ -64,19 +77,13 @@ namespace QRPDaemon
             {
                 if (fSubList != null)
                 {
-                    int intCnt = fSubList.Count;
-                    for (int i = 0; i < intCnt; i++)
+                    int intCnt = fSubList.AsEnumerable().Where(w => w.ProgFlag).Count();
+                    if (intCnt > 0)
                     {
-                        if (fSubList[i] != null)
+                        if (MessageBox.Show("SMIS Interface가 실행중입니다. 종료하시겠습니까?", "확인창", MessageBoxButtons.YesNo).Equals(DialogResult.No))
                         {
-                            if (fSubList[i].ProgFlag)
-                            {
-                                if (MessageBox.Show("SMIS Interface가 실행중입니다. 종료하시겠습니까?", "확인창", MessageBoxButtons.YesNo).Equals(DialogResult.No))
-                                {
-                                    e.Cancel = true;
-                                    return;
-                                }
-                            }
+                            e.Cancel = true;
+                            return;
                         }
                     }
                 }
@@ -101,7 +108,8 @@ namespace QRPDaemon
         {
             try
             {
-                this.tlPanel.Controls.Clear();
+                if (fSubList != null)
+                    fSubList.Clear();
 
                 int intCount = dgvENVList.Rows.Count;
 
@@ -118,7 +126,6 @@ namespace QRPDaemon
                             MessageBox.Show((i + 1).ToString() + "번째 행에 공장코드를 입력하세요.", "경고창", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             dgvENVList.CurrentCell = this.dgvENVList["PlantCode", i];
                             dgvENVList.BeginEdit(true);
-                            tlPanel.Controls.Clear();
                             return;
                         }
                         else if (dgvENVList.Rows[i].Cells["MeasureName"].Value.ToString().Equals(string.Empty))
@@ -126,7 +133,6 @@ namespace QRPDaemon
                             MessageBox.Show((i + 1).ToString() + "번째 행에 실험기기를 입력하세요.", "경고창", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             dgvENVList.CurrentCell = this.dgvENVList["MeasureName", i];
                             dgvENVList.BeginEdit(true);
-                            tlPanel.Controls.Clear();
                             return;
                         }
                         else if (dgvENVList.Rows[i].Cells["OriginFilePath"].Value.ToString().Equals(string.Empty))
@@ -134,7 +140,6 @@ namespace QRPDaemon
                             MessageBox.Show((i + 1).ToString() + "번째 행에 원본파일경로를 입력하세요.", "경고창", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             dgvENVList.CurrentCell = this.dgvENVList["OriginFilePath", i];
                             dgvENVList.BeginEdit(true);
-                            tlPanel.Controls.Clear();
                             return;
                         }
                         else if (dgvENVList.Rows[i].Cells["BackupFilePath"].Value.ToString().Equals(string.Empty))
@@ -142,7 +147,6 @@ namespace QRPDaemon
                             MessageBox.Show((i + 1).ToString() + "번째 행에 파일백업경로를 입력하세요.", "경고창", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             dgvENVList.CurrentCell = this.dgvENVList["BackupFilePath", i];
                             dgvENVList.BeginEdit(true);
-                            tlPanel.Controls.Clear();
                             return;
                         }
                         else if (dgvENVList.Rows[i].Cells["Interval"].Value.ToString().Equals("0") ||
@@ -151,7 +155,6 @@ namespace QRPDaemon
                             MessageBox.Show((i + 1).ToString() + "번째 행에 IF주기(분)를 입력하세요.", "경고창", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             dgvENVList.CurrentCell = this.dgvENVList["Interval", i];
                             dgvENVList.BeginEdit(true);
-                            tlPanel.Controls.Clear();
                             return;
                         }
                         #endregion
@@ -166,10 +169,11 @@ namespace QRPDaemon
                         file.Intervar = dgvENVList.Rows[i].Cells["Interval"].Value.ToInt();
                         file.RowIndex = dgvENVList.Rows[i].Cells["RowIndex"].Value.ToInt();
                         file.FileExtension = dgvENVList.Rows[i].Cells["FileExtension"].Value.ToString();
-                        file.Dock = DockStyle.Fill;
                         file.Show();
-
-                        tlPanel.Controls.Add(file, i % 3, i / 3);
+                        DETAIL.Controls.Add(file);
+                        DETAIL.Controls.SetChildIndex(file, 0);
+                        file.Dock = DockStyle.Top; ;
+                        file.Height = 250;
                         fSubList.Add(file);
                     }
                 }
