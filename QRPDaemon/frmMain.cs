@@ -109,7 +109,13 @@ namespace QRPDaemon
             try
             {
                 if (fSubList != null)
+                {
+                    foreach(var sub in fSubList)
+                    {
+                        DETAIL.Controls.Remove(sub);
+                    }
                     fSubList.Clear();
+                }
 
                 int intCount = dgvENVList.Rows.Count;
 
