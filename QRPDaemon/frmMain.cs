@@ -431,6 +431,7 @@ namespace QRPDaemon
                         dr["Apply"] = Convert.ToBoolean(xmlNodeEnvList.ChildNodes[i].SelectSingleNode("Apply").InnerText);
                         dr["PlantCode"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("PlantCode").InnerText;
                         dr["ProcessGroupCode"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("ProcessGroupCode").InnerText;
+                        dr["InspectTypeCode"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("InspectTypeCode").InnerText;
                         dr["MeasureName"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("MeasureName").InnerText;
                         dr["OriginFilePath"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("OriginFilePath").InnerText;
                         dr["BackupFilePath"] = xmlNodeEnvList.ChildNodes[i].SelectSingleNode("BackupFilePath").InnerText;

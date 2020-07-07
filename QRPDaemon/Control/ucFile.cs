@@ -145,21 +145,7 @@ namespace QRPDaemon.Control
                     ts = Properties.Settings.Default.StartTime_05;
                     break;
             }
-            st.SetTime(ts, mfDeleteGrid);
-            //st.SetTime(new TimeSpan(16, 26, 0), () =>
-            //{
-            //    try
-            //    {
-            //        txtLog.mfInvokeIfRequired(() =>
-            //        {
-            //            txtLog.Clear();
-            //        });
-            //    }
-            //    catch (System.Exception ex)
-            //    {
-            //        MessageBox.Show(ex.ToString());
-            //    }
-            //});
+            //st.SetTime(ts, mfDeleteGrid);
 
             //log4net.GlobalContext.Properties["LogName"] = $"{m_strPlantCode}.{m_strMeasureName}";
             //System.IO.FileInfo fiLogInfo = new System.IO.FileInfo(@"XML\\log4net.xml");
@@ -265,6 +251,9 @@ namespace QRPDaemon.Control
             {
                 try
                 {
+                    if (txtLog.Lines.Length > 3000)
+                        txtLog.Clear();
+
                     if (m_bolProgFlag)
                     {
                         mfSetToolStripStatusLabel("Start...");
@@ -564,7 +553,7 @@ namespace QRPDaemon.Control
                         DataSet dsFile = GetSaveDefaultDataSet();
                         DataRow dr;
                         string strSampleID = string.Empty;
-                        string strSampleDate;
+                        string strSampleDate = null;
                         bool bolBreak = false;
                         do
                         {
@@ -606,6 +595,17 @@ namespace QRPDaemon.Control
                                 }
                             }
                         });
+
+                        if (strSampleID.Equals(string.Empty))
+                        {
+                            Logger.Error($"SampleID is Empty!");
+                            return dateSampleDate;
+                        }
+                        else if((strSampleDate??"").Equals(string.Empty))
+                        {
+                            Logger.Error($"SampleDate is Empty!");
+                            return dateSampleDate;
+                        }
 
                         dr = dsFile.Tables["H"].NewRow();
                         dr["BatchID"] = 0;
@@ -700,6 +700,8 @@ namespace QRPDaemon.Control
                 DataRow dr;
                 int intBatchIndex = 1;
                 int intRowCount = dsData.Tables[0].Rows.Count;
+                string strSampleID = string.Empty;
+                string strSampleDate = string.Empty;
 
                 for (int i = 0; i < intRowCount; i++)
                 {
@@ -717,6 +719,9 @@ namespace QRPDaemon.Control
                         dr["BatchIndex"] = intBatchIndex;
                         dsFile.Tables["H"].Rows.Add(dr);
 
+                        strSampleID = dsData.Tables[0].Rows[i]["Ident"].ToString();
+                        strSampleDate= dsData.Tables[0].Rows[i]["Determination start"].ToString().Substring(0, 19);
+
                         foreach (DataColumn col in dsData.Tables[0].Columns)
                         {
                             dr = dsFile.Tables["D"].NewRow();
@@ -729,6 +734,17 @@ namespace QRPDaemon.Control
 
                         intBatchIndex++;
                     }
+                }
+
+                if (strSampleID.Equals(string.Empty))
+                {
+                    Logger.Error($"SampleID is Empty!");
+                    return dateSampleDate;
+                }
+                else if ((strSampleDate ?? "").Equals(string.Empty))
+                {
+                    Logger.Error($"SampleDate is Empty!");
+                    return dateSampleDate;
                 }
 
                 DateTime dateFileDate = dateSampleDate;
@@ -796,6 +812,8 @@ namespace QRPDaemon.Control
                 DataRow dr;
                 int intBatchIndex = 1;
                 int intRowCount = dsData.Tables[0].Rows.Count;
+                string strSampleID = string.Empty;
+                string strSampleDate = string.Empty;
 
                 for (int i = 0; i < intRowCount; i++)
                 {
@@ -812,6 +830,9 @@ namespace QRPDaemon.Control
                         dr["BatchIndex"] = intBatchIndex;
                         dsFile.Tables["H"].Rows.Add(dr);
 
+                        strSampleID = dsData.Tables[0].Rows[i]["Sample Name"].ToString();
+                        strSampleDate = dsData.Tables[0].Rows[i]["Date"].ToString();
+
                         foreach (DataColumn col in dsData.Tables[0].Columns)
                         {
                             dr = dsFile.Tables["D"].NewRow();
@@ -824,6 +845,17 @@ namespace QRPDaemon.Control
 
                         intBatchIndex++;
                     }
+                }
+
+                if (strSampleID.Equals(string.Empty))
+                {
+                    Logger.Error($"SampleID is Empty!");
+                    return dateSampleDate;
+                }
+                else if ((strSampleDate ?? "").Equals(string.Empty))
+                {
+                    Logger.Error($"SampleDate is Empty!");
+                    return dateSampleDate;
                 }
 
                 DateTime dateFileDate = dateSampleDate;
@@ -918,7 +950,7 @@ namespace QRPDaemon.Control
                         DataSet dsFile = GetSaveDefaultDataSet();
                         DataRow dr;
                         string strSampleID = string.Empty;
-                        string strSampleDate;
+                        string strSampleDate = null;
                         bool bolBreak = false;
                         do
                         {
@@ -977,6 +1009,17 @@ namespace QRPDaemon.Control
                                 },
                             }
                         });
+
+                        if (strSampleID.Equals(string.Empty))
+                        {
+                            Logger.Error($"SampleID is Empty!");
+                            return dateSampleDate;
+                        }
+                        else if ((strSampleDate ?? "").Equals(string.Empty))
+                        {
+                            Logger.Error($"SampleDate is Empty!");
+                            return dateSampleDate;
+                        }
 
                         dr = dsFile.Tables["H"].NewRow();
                         dr["BatchID"] = 0;

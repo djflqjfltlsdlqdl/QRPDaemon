@@ -473,10 +473,10 @@ namespace QRPDaemon
                         //// Gets or sets the password used to open password protected workbooks.
                         //Password = "password",
 
-                        //// Gets or sets an array of CSV separator candidates. The reader 
-                        //// autodetects which best fits the input data. Default: , ; TAB | # 
-                        //// (CSV only)
-                        //AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
+                        // Gets or sets an array of CSV separator candidates. The reader 
+                        // autodetects which best fits the input data. Default: , ; TAB | # 
+                        // (CSV only)
+                        AutodetectSeparators = new char[] { ',', ';', '\t', '|', '#' },
 
                         //// Gets or sets a value indicating whether to leave the stream open after
                         //// the IExcelDataReader object is disposed. Default: false
@@ -499,7 +499,8 @@ namespace QRPDaemon
                         {
                             while (reader.Read())
                             {
-                                switch (reader.GetString(0) ?? "")
+                                string strvalue = reader.GetString(0) ?? "";
+                                switch (strvalue)
                                 {
                                     case "Sample Name":
                                         strSampleID = reader.GetString(1);
