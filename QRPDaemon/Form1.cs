@@ -144,7 +144,7 @@ namespace QRPDaemon
         {
             try
             {
-                using (var stream = File.Open(fn_FileSelect(), FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(fn_FileSelect(), FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
                     {
@@ -562,7 +562,7 @@ namespace QRPDaemon
             {
 
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
                     {
@@ -892,20 +892,167 @@ namespace QRPDaemon
         /// 울산 ICP-OES
         /// </summary>
         /// <param name="strFilePath"></param>
-        private void mfParsing_Cation_05_OES(string strFilePath)
+        private DateTime mfParsing_Cation_05_OES(string strFilePath)
         {
+            string m_strPlantCode = "05";
+            string m_strProcessGroupCode = "81";
+            string m_strBackupFilePath = "BackupFilePath";
+            string m_strMeasureName = "ICP_OES";
+            m_intRowIndex = 1;
             try
             {
-                DataSet dsData = mfReadFile(strFilePath, 2);
-                if (dsData != null && dsData.Tables.Count > 0)
+                DateTime dateSampleDate = DateTime.MaxValue;
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    ultraGrid1.SetDataBinding(dsData, dsData.Tables[0].TableName);
+                    using (var reader = ExcelReaderFactory.CreateReader(stream))
+                    {
+                        DataSet dsFile = GetSaveDefaultDataSet();
+                        DataRow dr;
+
+                        var result = reader.AsDataSet(new ExcelDataSetConfiguration()
+                        {
+                            ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+                            {
+                                EmptyColumnNamePrefix = "Column",
+                                UseHeaderRow = false,
+                                
+                                ReadHeaderRow = (rowReader) =>
+                                {
+                                    // RowIndex : 1
+                                    for (int i = 0; i < m_intRowIndex; i++)
+                                    {
+                                        rowReader.Read();
+                                    }
+                                },
+                                FilterRow = rowReader =>
+                                {
+                                    var hasData = false;
+                                    for (var i = 0; i < rowReader.FieldCount; i++)
+                                    {
+                                        if (rowReader[i] == null || string.IsNullOrEmpty(rowReader[i].ToString()))
+                                        {
+                                            continue;
+                                        }
+
+                                        hasData = true;
+                                        break;
+                                    }
+
+                                    return hasData;
+                                },
+                            }
+                        });
+
+                        var vHeaders = result.Tables[0].AsEnumerable().Where(w => (w.Field<object>(0)??string.Empty).Equals("Label") && (w.Field<object>(1)??string.Empty).Equals("Type")).ToList();
+                        if (vHeaders.Count() > 0)
+                        {
+                            var vHeader = vHeaders.First();
+
+                            int intColCount = result.Tables[0].Columns.Count;
+                            for (int i = 0; i < intColCount; i++)
+                            {
+                                result.Tables[0].Columns[i].ColumnName = vHeader[i].ToString();
+                                result.Tables[0].Columns[i].Caption = vHeader[i].ToString();
+                            }
+                        }
+
+                        foreach (var dd in vHeaders)
+                        {
+                            dd.Delete();
+                        }
+
+                        result.Tables[0].AcceptChanges();
+
+                        ultraGrid1.SetDataBinding(result.Tables[0], string.Empty);
+
+                        var vBatch = result.Tables[0].AsEnumerable().Select(s => new
+                        {
+                            SampleID = s.Field<object>("Label"),
+                            SampleDate = s.Field<DateTime>("Date Time")
+                        })
+                            .Distinct().OrderBy(o => o.SampleDate);
+                        
+                        int intBatchIndex = 0;
+                        foreach (var batch in vBatch)
+                        {
+                            dr = dsFile.Tables["H"].NewRow();
+                            dr["BatchID"] = 0;
+                            dr["PlantCode"] = m_strPlantCode;
+                            dr["ProcessGroupCode"] = m_strProcessGroupCode;
+                            dr["InspectTypeCode"] = m_strInspectTypeCode;
+                            dr["SampleName"] = batch.SampleID;
+                            dr["SampleDate"] = batch.SampleDate;
+                            dr["BatchIndex"] = intBatchIndex;
+                            dsFile.Tables["H"].Rows.Add(dr);
+
+                            var vDetail = result.Tables[0].AsEnumerable().Where(w => (w.Field<object>("Label") ?? string.Empty).ToString().Equals(batch.SampleID)
+                                && w.Field<DateTime>("Date Time").Equals(batch.SampleDate));
+                            foreach (var dd in vDetail)
+                            {
+                                foreach (DataColumn col in result.Tables[0].Columns)
+                                {
+                                    dr = dsFile.Tables["D"].NewRow();
+                                    dr["ColID"] = col.Ordinal;
+                                    dr["RowIndex"] = result.Tables[0].Rows.IndexOf(dd);
+                                    dr["InspectValue"] = dd.Field<dynamic>(col.ColumnName);
+                                    dr["BatchIndex"] = intBatchIndex;
+                                    dsFile.Tables["D"].Rows.Add(dr);
+                                }
+                            }
+
+                            dateSampleDate = batch.SampleDate;
+                            intBatchIndex++;
+                        }
+
+                        DateTime dateFileDate = dateSampleDate;
+                        if (m_strPlantCode.Equals("03"))
+                            dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                        else if (m_strPlantCode.Equals("05"))
+                            dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                        string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                        dr = dsFile.Tables["FI"].NewRow();
+                        System.IO.FileInfo fi = new FileInfo(strFilePath);
+                        dr["FileID"] = 0;
+                        dr["FileName"] = fi.Name;
+                        dr["OriginFilePath"] = strFilePath;
+                        dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                        dsFile.Tables["FI"].Rows.Add(dr);
+
+                        foreach (DataColumn col in result.Tables[0].Columns)
+                        {
+                            dr = dsFile.Tables["FC"].NewRow();
+                            dr["FileID"] = 0;
+                            dr["ColID"] = col.Ordinal;
+                            dr["ColumnName"] = col.ColumnName;
+
+                            dsFile.Tables["FC"].Rows.Add(dr);
+                        }
+
+                        //string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                        //TransErrRtn ErrRtn = new TransErrRtn();
+                        //ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                        //if (!ErrRtn.ErrNum.Equals(0))
+                        //{
+                        //    Logger.Error($"Save Error : {strErrRtn}");
+                        //    dateSampleDate = DateTime.MaxValue;
+                        //}
+                        //else
+                        //{
+                        //    Logger.Info($"Save Success! : {strFilePath}");
+                        //}
+
+                        reader.Close();
+                    }
+                    stream.Close();
                 }
+                return dateSampleDate;
             }
             catch (Exception ex)
             {
-                //this.mfAddGridMessage(ex.ToString());
-                ultraTextEditor1.Text = ex.ToString();
+                //throw new System.ApplicationException(System.Reflection.MethodBase.GetCurrentMethod().Name, ex);
+                return DateTime.Now;
             }
         }
 
@@ -923,7 +1070,7 @@ namespace QRPDaemon
             try
             {
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateReader(stream))
                     {
@@ -1075,7 +1222,7 @@ namespace QRPDaemon
             try
             {
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
                     {
@@ -1272,7 +1419,7 @@ namespace QRPDaemon
         {
             try
             {
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     if (Path.GetExtension(strFilePath).ToUpper().Equals(".XLS") || Path.GetExtension(strFilePath).ToUpper().Equals(".XLSX"))
                     {
