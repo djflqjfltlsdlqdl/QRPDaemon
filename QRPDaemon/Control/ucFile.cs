@@ -550,7 +550,7 @@ namespace QRPDaemon.Control
             try
             {
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateCsvReader(stream))
                     {
@@ -921,7 +921,7 @@ namespace QRPDaemon.Control
             {
 
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
                     {
@@ -1256,7 +1256,7 @@ namespace QRPDaemon.Control
             try
             {
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateReader(stream))
                     {
@@ -1415,7 +1415,7 @@ namespace QRPDaemon.Control
             try
             {
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateReader(stream))
                     {
@@ -1562,7 +1562,7 @@ namespace QRPDaemon.Control
             try
             {
                 DateTime dateSampleDate = DateTime.MaxValue;
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     using (var reader = ExcelReaderFactory.CreateCsvReader(stream, new ExcelReaderConfiguration()
                     {
@@ -1756,7 +1756,7 @@ namespace QRPDaemon.Control
         {
             try
             {
-                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read))
+                using (var stream = File.Open(strFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     if (Path.GetExtension(strFilePath).ToUpper().Equals(".XLS") || Path.GetExtension(strFilePath).ToUpper().Equals(".XLSX"))
                     {
