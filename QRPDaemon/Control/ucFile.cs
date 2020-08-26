@@ -319,7 +319,8 @@ namespace QRPDaemon.Control
                                                             dateSampleDate = mfParsing_Anion_05(fi.FullName);
                                                             break;
                                                         case "ICP-MS(7900)":
-                                                            mfParsing_Cation_05_7900(fi.FullName);
+                                                        case "ICP-MS":
+                                                            dateSampleDate = mfParsing_Cation_05_7900(fi.FullName);
                                                             break;
                                                         //case "ICP-MS(A-M90)":
                                                         //    mfParsing_Cation_05_M90(fi.FullName);
@@ -1234,12 +1235,96 @@ namespace QRPDaemon.Control
         /// 공통
         /// </summary>
         /// <param name="strFilePath">파일경로</param>
-        private void mfParsing_Cation_05_7900(string strFilePath)
+        private DateTime mfParsing_Cation_05_7900(string strFilePath)
         {
+            // RowIndex : 0
             try
             {
-                // RowIndex : 0
+                DateTime dateSampleDate = DateTime.MaxValue;
                 DataSet dsData = mfReadFile(strFilePath, m_intRowIndex);
+                if (dsData != null && dsData.Tables.Count > 0)
+                {
+                    DataSet dsFile = GetSaveDefaultDataSet();
+                    DataRow dr;
+
+                    var vBatch = dsData.Tables[0].AsEnumerable().Select(s => new
+                    {
+                        SampleID = s.Field<string>("Sample Name"),
+                        SampleDate = s.Field<string>("Date and Time Acquired")
+                    })
+                        .Distinct().OrderBy(o => o.SampleDate);
+
+                    int intBatchIndex = 0;
+                    foreach (var batch in vBatch)
+                    {
+                        dr = dsFile.Tables["H"].NewRow();
+                        dr["BatchID"] = 0;
+                        dr["PlantCode"] = m_strPlantCode;
+                        dr["ProcessGroupCode"] = m_strProcessGroupCode;
+                        dr["InspectTypeCode"] = m_strInspectTypeCode;
+                        dr["SampleName"] = batch.SampleID;
+                        dr["SampleDate"] = batch.SampleDate;
+                        dr["BatchIndex"] = intBatchIndex;
+                        dsFile.Tables["H"].Rows.Add(dr);
+
+                        var vDetail = dsData.Tables[0].AsEnumerable().Where(w => w.Field<string>("Sample Name").Equals(batch.SampleID) && w.Field<string>("Date and Time Acquired").Equals(batch.SampleDate));
+                        foreach (var dd in vDetail)
+                        {
+                            foreach (DataColumn col in dsData.Tables[0].Columns)
+                            {
+                                dr = dsFile.Tables["D"].NewRow();
+                                dr["ColID"] = col.Ordinal;
+                                dr["RowIndex"] = dsData.Tables[0].Rows.IndexOf(dd);
+                                dr["InspectValue"] = dd.Field<dynamic>(col.ColumnName);
+                                dr["BatchIndex"] = intBatchIndex;
+                                dsFile.Tables["D"].Rows.Add(dr);
+                            }
+                        }
+                        DateTime.TryParse(batch.SampleDate, out dateSampleDate);
+                        intBatchIndex++;
+                    }
+
+                    DateTime dateFileDate = dateSampleDate;
+                    if (m_strPlantCode.Equals("03"))
+                        dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_03;
+                    else if (m_strPlantCode.Equals("05"))
+                        dateFileDate = dateFileDate - Properties.Settings.Default.StartTime_05;
+
+                    string strTargetPath = string.Format(@"{0}\{1}\{2}", m_strBackupFilePath, dateSampleDate.ToString("yyyy-MM-dd"), m_strMeasureName);
+
+                    dr = dsFile.Tables["FI"].NewRow();
+                    System.IO.FileInfo fi = new FileInfo(strFilePath);
+                    dr["FileID"] = 0;
+                    dr["FileName"] = fi.Name;
+                    dr["OriginFilePath"] = strFilePath;
+                    dr["BackupFilePath"] = System.IO.Path.Combine(strTargetPath, fi.Name);
+                    dsFile.Tables["FI"].Rows.Add(dr);
+
+                    foreach (DataColumn col in dsData.Tables[0].Columns)
+                    {
+                        dr = dsFile.Tables["FC"].NewRow();
+                        dr["FileID"] = 0;
+                        dr["ColID"] = col.Ordinal;
+                        dr["ColumnName"] = col.ColumnName;
+
+                        dsFile.Tables["FC"].Rows.Add(dr);
+                    }
+
+                    string strErrRtn = QRPDaemon.BL.clsBL.mfSaveBatchFile(dsFile);
+                    TransErrRtn ErrRtn = new TransErrRtn();
+                    ErrRtn = ErrRtn.mfDecodingErrMessage(strErrRtn);
+                    if (!ErrRtn.ErrNum.Equals(0))
+                    {
+                        Logger.Error($"Save Error : {strErrRtn}");
+                        dateSampleDate = DateTime.MaxValue;
+                    }
+                    else
+                    {
+                        Logger.Info($"Save Success! : {strFilePath}");
+                    }
+                }
+
+                return dateSampleDate;
             }
             catch (Exception ex)
             {
@@ -1291,6 +1376,9 @@ namespace QRPDaemon.Control
                                         hasData = true;
                                         break;
                                     }
+
+                                    if (rowReader[0] != null && rowReader[0].ToString().StartsWith("Worksheet exported"))
+                                        return false;
 
                                     return hasData;
                                 },
