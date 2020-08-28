@@ -341,9 +341,7 @@ namespace QRPDaemon
         {
             try
             {
-                //메인 폼 아이콘 적용
-                this.Icon = Properties.Resources.servicerunning;
-
+                this.Icon = Properties.Resources.iconmonstr_gear_12;
                 //Tray 아이콘 적용
                 trayIcon.Text = this.Text;
                 trayIcon.Icon = Properties.Resources.servicerunning;

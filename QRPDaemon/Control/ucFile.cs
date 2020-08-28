@@ -359,6 +359,24 @@ namespace QRPDaemon.Control
                                                 Logger.Info($"File BackUp : {fi.FullName}");
                                                 m_dateLastSampleDate = dateSampleDate;
                                             }
+                                            else
+                                            {
+                                                string strTargetPath = string.Format(@"{0}\BADFILE\{1}", m_strBackupFilePath, m_strMeasureName);
+                                                System.IO.DirectoryInfo diTarget = new System.IO.DirectoryInfo(strTargetPath);
+                                                if (!diTarget.Exists)
+                                                    diTarget.Create();
+
+                                                try
+                                                {
+                                                    fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
+                                                    fi.Delete();
+                                                }
+                                                catch
+                                                {
+                                                }
+
+                                                Logger.Info($"File BackUp : {fi.FullName}");
+                                            }
                                         }
                                         catch(System.Exception ex)
                                         {
@@ -366,7 +384,7 @@ namespace QRPDaemon.Control
                                         }
                                     }
 
-                                    if (m_strPlantCode.Equals("03") && m_strMeasureName.Equals("밀도계"))
+                                    if ((m_strPlantCode.Equals("03") && m_strMeasureName.Equals("밀도계")) || (m_strPlantCode.Equals("05") && m_strMeasureName.Equals("밀도계")))
                                     {
                                         System.IO.FileInfo[] delFiles = diInfo.GetFiles($"*.md5");
                                         foreach (System.IO.FileInfo fi in delFiles)
