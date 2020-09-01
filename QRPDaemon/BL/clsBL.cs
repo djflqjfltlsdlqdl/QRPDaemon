@@ -99,6 +99,8 @@ namespace QRPDaemon.BL
                                     {
                                         intBatchIndex = row.Field<int>("BatchIndex");
                                         intBatchID = ErrRtn.mfGetReturnValue(0).ToInt64();
+                                        if (intBatchID < 0)
+                                            continue;
 
                                         #region File 측정데이터 저장
                                         var vResult = dsData.Tables["D"].AsEnumerable().Where(w => w.Field<int>("BatchIndex").Equals(intBatchIndex));

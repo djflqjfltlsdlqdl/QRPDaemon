@@ -346,10 +346,13 @@ namespace QRPDaemon.Control
                                                 if (!diTarget.Exists)
                                                     diTarget.Create();
 
+                                                string strTargetFileName = System.IO.Path.Combine(strTargetPath, fi.Name);
+                                                if (System.IO.File.Exists(strTargetFileName))
+                                                    strTargetFileName = strTargetFileName + DateTime.Now.ToString("_HHmmss");
                                                 try
                                                 {
                                                     //fi.MoveTo(System.IO.Path.Combine(strTargetPath, fi.Name));
-                                                    fi.CopyTo(System.IO.Path.Combine(strTargetPath, fi.Name), true);
+                                                    fi.CopyTo(strTargetFileName, true);
                                                     fi.Delete();
                                                 }
                                                 catch
