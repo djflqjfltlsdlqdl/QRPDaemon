@@ -4,48 +4,120 @@
     <Apply>True</Apply>
     <PlantCode>03</PlantCode>
     <ProcessGroupCode>50</ProcessGroupCode>
-    <InspectTypeCode></InspectTypeCode>
+    <InspectTypeCode>H001001</InspectTypeCode>
     <OriginFilePath>\\192.168.16.7\23.H202_Data\1._밀도계</OriginFilePath>
     <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
-    <Interval>5</Interval>
+    <Interval>3</Interval>
     <MeasureName>밀도계</MeasureName>
     <RowIndex>2</RowIndex>
     <FileExtension>.xls</FileExtension>
   </EnvSetting>
   <EnvSetting>
-    <Apply>False</Apply>
+    <Apply>True</Apply>
     <PlantCode>03</PlantCode>
     <ProcessGroupCode>50</ProcessGroupCode>
-    <InspectTypeCode></InspectTypeCode>
+    <InspectTypeCode>H001002</InspectTypeCode>
     <OriginFilePath>\\192.168.16.7\23.H202_Data\2_TOC</OriginFilePath>
     <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
-    <Interval>5</Interval>
+    <Interval>3</Interval>
     <MeasureName>TOC</MeasureName>
-    <RowIndex>10</RowIndex>
+    <RowIndex>21</RowIndex>
     <FileExtension>.txt</FileExtension>
   </EnvSetting>
   <EnvSetting>
-    <Apply>False</Apply>
+    <Apply>True</Apply>
     <PlantCode>03</PlantCode>
     <ProcessGroupCode>50</ProcessGroupCode>
-    <InspectTypeCode></InspectTypeCode>
+    <InspectTypeCode>H001004</InspectTypeCode>
     <OriginFilePath>\\192.168.16.7\23.H202_Data\3_IC</OriginFilePath>
     <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
-    <Interval>5</Interval>
+    <Interval>3</Interval>
     <MeasureName>음이온</MeasureName>
     <RowIndex>0</RowIndex>
     <FileExtension>.csv</FileExtension>
   </EnvSetting>
   <EnvSetting>
-    <Apply>False</Apply>
+    <Apply>True</Apply>
     <PlantCode>03</PlantCode>
     <ProcessGroupCode>50</ProcessGroupCode>
-    <InspectTypeCode></InspectTypeCode>
+    <InspectTypeCode>H001003</InspectTypeCode>
     <OriginFilePath>\\192.168.16.7\23.H202_Data\4_ICP-MS</OriginFilePath>
     <BackupFilePath>\\192.168.16.7\23.H202_Data\BackupData</BackupFilePath>
-    <Interval>5</Interval>
+    <Interval>3</Interval>
     <MeasureName>양이온</MeasureName>
     <RowIndex>18</RowIndex>
     <FileExtension>.rep</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>True</Apply>
+    <PlantCode>05</PlantCode>
+    <ProcessGroupCode>81</ProcessGroupCode>
+    <InspectTypeCode>H001001</InspectTypeCode>
+    <OriginFilePath>\\192.168.16.6\7.h202_qc\1_밀도계</OriginFilePath>
+    <BackupFilePath>\\192.168.16.6\7.h202_qc\BackupData</BackupFilePath>
+    <Interval>3</Interval>
+    <MeasureName>밀도계</MeasureName>
+    <RowIndex>2</RowIndex>
+    <FileExtension>.xls</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>True</Apply>
+    <PlantCode>05</PlantCode>
+    <ProcessGroupCode>81</ProcessGroupCode>
+    <InspectTypeCode>H001002</InspectTypeCode>
+    <OriginFilePath>\\192.168.16.6\7.h202_qc\2_TOC</OriginFilePath>
+    <BackupFilePath>\\192.168.16.6\7.h202_qc\BackupData</BackupFilePath>
+    <Interval>3</Interval>
+    <MeasureName>TOC</MeasureName>
+    <RowIndex>21</RowIndex>
+    <FileExtension>.txt</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>True</Apply>
+    <PlantCode>05</PlantCode>
+    <ProcessGroupCode>81</ProcessGroupCode>
+    <InspectTypeCode>H001004</InspectTypeCode>
+    <OriginFilePath>\\192.168.16.6\7.h202_qc\3_IC\ICS2100\20200801.seq</OriginFilePath>
+    <BackupFilePath>\\192.168.16.6\7.h202_qc\BackupData</BackupFilePath>
+    <Interval>3</Interval>
+    <MeasureName>ICS2100</MeasureName>
+    <RowIndex>26</RowIndex>
+    <FileExtension>.xls</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>True</Apply>
+    <PlantCode>05</PlantCode>
+    <ProcessGroupCode>81</ProcessGroupCode>
+    <InspectTypeCode>H001004</InspectTypeCode>
+    <OriginFilePath>\\192.168.16.6\7.h202_qc\3_IC\ICS5000\과수200801.seq</OriginFilePath>
+    <BackupFilePath>\\192.168.16.6\7.h202_qc\BackupData</BackupFilePath>
+    <Interval>3</Interval>
+    <MeasureName>ICS5000</MeasureName>
+    <RowIndex>26</RowIndex>
+    <FileExtension>.xls</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>True</Apply>
+    <PlantCode>05</PlantCode>
+    <ProcessGroupCode>81</ProcessGroupCode>
+    <InspectTypeCode>H001003</InspectTypeCode>
+    <OriginFilePath>\\192.168.16.6\7.h202_qc\5_ICP-OES</OriginFilePath>
+    <BackupFilePath>\\192.168.16.6\7.h202_qc\BackupData</BackupFilePath>
+    <Interval>3</Interval>
+    <MeasureName>ICP-OES</MeasureName>
+    <RowIndex>1</RowIndex>
+    <FileExtension>.xlsx</FileExtension>
+  </EnvSetting>
+  <EnvSetting>
+    <Apply>True</Apply>
+    <PlantCode>05</PlantCode>
+    <ProcessGroupCode>81</ProcessGroupCode>
+    <InspectTypeCode>H001003</InspectTypeCode>
+    <OriginFilePath>\\192.168.16.6\7.h202_qc\4_ICP-MS</OriginFilePath>
+    <BackupFilePath>\\192.168.16.6\7.h202_qc\BackupData</BackupFilePath>
+    <Interval>3</Interval>
+    <MeasureName>ICP-MS</MeasureName>
+    <RowIndex>0</RowIndex>
+    <FileExtension>.csv</FileExtension>
   </EnvSetting>
 </EnvSettings>
