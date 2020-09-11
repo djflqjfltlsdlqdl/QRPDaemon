@@ -143,7 +143,6 @@
     <None Include="LICENSE">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="iconmonstr-gear-12-240.png" />
     <None Include="iconmonstr-gear-12.ico" />
     <Content Include="XML\log4net.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

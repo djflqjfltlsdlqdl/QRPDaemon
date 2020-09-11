@@ -269,7 +269,8 @@ namespace QRPDaemon.Control
                                 if (diInfo.Exists)
                                 {
                                     DateTime dateSampleDate = DateTime.Now;
-                                    System.IO.FileInfo[] getFiles = diInfo.GetFiles($"*{m_strFileExtension}");
+                                    //System.IO.FileInfo[] getFiles = diInfo.GetFiles($"*{m_strFileExtension}");
+                                    System.Collections.Generic.IList<FileInfo> getFiles = mfGetFiles(diInfo);
                                     foreach (System.IO.FileInfo fi in getFiles)
                                     {
                                         if (!m_bolProgFlag)
@@ -559,6 +560,33 @@ namespace QRPDaemon.Control
             {
                 txtLog.Clear();
             });
+        }
+        /// <summary>
+        /// Directory 안의 파일 반환
+        /// </summary>
+        /// <param name="diInfo">Root 디렉토리 정보</param>
+        /// <returns></returns>
+        private System.Collections.Generic.List<FileInfo> mfGetFiles(DirectoryInfo diInfo)
+        {
+            System.Collections.Generic.List<FileInfo> files = new System.Collections.Generic.List<FileInfo>();
+            try
+            {
+                System.IO.FileInfo[] getFiles = diInfo.GetFiles($"*{m_strFileExtension}");
+
+                foreach (FileInfo f in diInfo.GetFiles($"*{m_strFileExtension}"))
+                {
+                    files.Add(f);
+                }
+                foreach (DirectoryInfo d in diInfo.GetDirectories())
+                {
+                    files.AddRange(mfGetFiles(d));
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.Error("Error in GetFIles", ex);
+            }
+            return files;
         }
 
         #region File Parsing
